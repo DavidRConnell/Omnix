@@ -1,0 +1,49 @@
+#+TITLE: Omnix
+
+The aim of this package is to make it easier to write technical documents in org-mode without relying on backend specific logic that makes it difficult to export to other output file types.
+Many high-level document generation functions (like managing acronyms, context-specific referencing, coloring text) are not directly supported in Org mode.
+These means either hardcoding acronyms and cross-referencing values (error-prone) or adding in backend specific logic that makes the document more tedious to write and harder to export to multiple backends.
+Like ~org-cite~ did to citation management, ~Omnix~ intends to do to some other features that are supported through third-party LaTeX packages.
+
+The primary focus is writing the logic of some common LaTeX packages in emacs-lisp and providing new org-mode links and macros for them.
+This can be used to simplify exporting to multiple backends and to generate a tex file that only depends on basic LaTeX packages typically allowed by journals while continuing to let the computer manage tedious and error prone tasks.
+For instance, you can continue to use ~gls~ to handle acronyms for you but they will be expanded on export so the final tex file does not depend on the ~glossaries~ package.
+While this should also allow ~ox~ to produce an HTML or docx/odt file.
+
+This package does not intend on fully porting the LaTeX packages it supports.
+Rather the goal is to produce an incrementally larger set of functionality as needed to produce files.
+
+* Working
+* In progress
+** Basic
+Similar to how ~org-cite~ has an option to choose to use defer management to LaTeX native citation engines like ~biblatex~ or to always perform the citation management itself, ~omnix~ should have a options to expand links to LaTeX commands when exporting to LaTeX or to expand values itself.
+Something like ~#+OMNIX_CREF_EXPORT: latex:ref link:t~ where options could be ~cref~ (replace the link with ~cref~ and let it handle everything), ~ref~ (determine the element type and places it in front of the reference then pass the label to ~ref~), or ~nil~ to place the element type and handling numbering.
+So ~latex~ would mean this is how to handle the latex backend and link would provide whether to set a link to the element being referenced.
+If set to ~cref~, this should include the ~cref~ usepackage call in the tex file with needed options to get linking set.
+** ~glossaries~
+- Allow the definition of acronyms in the Org header.
+- Links analogous to ~gls~, ~acrlong~, and ~acrshort~.
+- ~#+PRINT_GLOSSARY~ and ~#+PRINT_ACRONYMS~ macros analogous to ~org-cite~'s ~#+PRINT_BIBLIOGRAPHY~ macro.
+- Toggle header argument for whether to link to the original gls call / the definition in the glossary or acronym list.
+** ~xcolor~
+- Add header argument for defining colors with HTML color codes.
+- Add link for coloring text.
+  #+BEGIN_VERBATIM
+  [[color:red][This should be red]]
+  #+END_VERBATIM
+
+  Should fall back to emphasis or nothing for backends that don't support colored text (like ascii).
+** ~clever ref~
+- Ref links that include the type of the thing being cross-referenced automatically. Should have a similar syntax as the ~org-cite~ citations.
+- Header options for how different elements should be named (analogous to ~cref~'s format settings)
+- Potentially flags for setting ~\frontmatter~, ~\appendix~, etc (even add a SI one) which modify the counter used and the formatting convention.
+- Option to let tex handle the actual referencing with it's usual ~ref~ commands while other backends would rely on the ~omnix~ to handle counting.
+- Toggle header argument for linking to element being referenced.
+- Potentially subfigure linking.
+** ~siunitx~
+- Basic command for adding grouping for numbers.
+- Possibly a command for handling units but may not be too useful outside of LaTeX.
+** ~authblk~
+- Extend or add to the ~AUTHOR~ keyword a way to input multiple authors and define affiliations that can associated with each author.
+** ~sansext~ links
+The sansext link can be used to defer choice of figure type to ~omnix~ which will make an output specific decision, preferring PDF files for tex / PDF output, SVG for HTML, and PNG for docx.

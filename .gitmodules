@@ -1,0 +1,3 @@
+[submodule "vendor/batch-ox"]
+	path = vendor/batch-ox
+	url = https://github.com/DavidRConnell/batch-ox
