@@ -35,7 +35,7 @@
 
 ;;; Code:
 
-(require 'omnix-glossaries)
+(require 'omnix-acronym)
 
 (provide 'omnix)
 ;;; omnix.el ends here.
