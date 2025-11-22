@@ -1,5 +1,6 @@
 export TOP_DIR := $(PWD)
 export SRC_FILES := $(wildcard $(TOP_DIR)/*.el)
+export TEST_FILES
 
 EMACS ?= emacs
 INIT_EL ?= "(progn (require 'omnix) (require 'batch-ox))"
