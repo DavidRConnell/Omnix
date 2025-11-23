@@ -29,52 +29,36 @@
 
 (require 'ox)
 
-;; Public vars.
-(defun omnix-create-link-latex (key target)
-  "Create link anchor KEY around TARGET."
-  (format "\\hypertarget{%s}{%s}" key target))
+(defvar omnix--additional-latex-packages '()
+  "List of LaTeX packages required for Omnix links.")
 
-(defun omnix-create-link-html (key target)
-  "Create link anchor KEY around TARGET."
-  (format "<a id=\"%s\">%s</a>" key target))
+(defun omnix--add-latex-package (package)
+  "Add PACKAGE to the list of required LaTeX packages."
+  (add-to-list omnix--additional-latex-packages package))
 
-(defvar omnix-create-link-functions-alist `((latex . ,#'omnix-create-link-latex)
-					    (html . ,#'omnix-create-link-html)
-					    (md . ,#'omnix-create-link-html))
-  "An alist associating backends with a function for creating link anchors.
+(defun omnix--alist-keys (alist)
+  "Return a list of keys in the ALIST"
+  (mapcar #'car alist))
 
-The function should accept KEY for the anchor name and TARGET for the text to
-anchor.
-
-This is only used with plain processors.
-
-See also `omnix-link-to-filter-alist'.")
-
-(defun omnix-link-to-latex (key description)
-  "Link to a predefined KEY with DESCRIPTION."
-  (format "\\hyperlink{%s}{%s}" key description))
-
-(defun omnix-link-to-html (key description)
-  "Link to a predefined KEY with DESCRIPTION."
-  (format "<a href=\"#%s\">%s</a>" key description))
-
-(defvar omnix-link-to-functions-alist `((latex . ,#'omnix-link-to-latex)
-					(html . ,#'omnix-link-to-html)
-					(md . ,#'omnix-link-to-html))
-  "An alist associating backends with a function for linking to a link anchor.
-
-The function should take an anchor KEY and a DESCRIPTION to write in the link.
-
-This is only used with plain processors.
-
-See also `omnix-create-link-format-alist'.")
-
-;; Private helpers
-(defun omnix--alist-get-backend (backend alist &optional default)
+(defun omnix--alist-get-backend (backend alist &optional strict-p)
   "Get ALIST items associated with BACKEND.
 
-If BACKEND is not in the ALIST return DEFAULT."
-  (alist-get backend alist default nil 'org-export-derived-backend-p))
+If BACKEND is not in the ALIST return item associated with t unless STRICT-P is
+non-nil, then return nil."
+  (let ((backup (if strict-p nil (alist-get t alist))))
+    (alist-get backend alist backup nil
+	       (lambda (key search-term)
+		 (org-export-derived-backend-p search-term key)))))
+
+;; (defun omnix--add-latex-packages (tree format _)
+;;   "Add the packages collected in `omnix--add-latex-packages' to the TREE."
+;;   (if (eq format 'latex)
+;;       (org-element- keyword)))
+
+;; ;; Make sure this called after other omnix parse tree functions have determined
+;; ;; which packages are needed.
+;; (add-to-list org-export-filter-parse-tree-functions #'omnix--add-latex-packages
+;; 	     'append)
 
 (provide 'omnix--utils)
 ;;; omnix--utils.el ends here

@@ -4,18 +4,17 @@
 #+OMNIX_ACRONYM: tbd:TBD:To Be Determined
 #+OMNIX_ACRONYM: idk:IDK:I don't know
 #+OMNIX_ACRONYM: lol:LOL:Laugh Out Loud
-#+OMNIX_ACRONMY: uad:UAD:Unused Acronym Definition
-#+OMNIX_GLOSSARY_PROCESSOR: latex:gls
-#+OPTIONS: omnix-link-acronyms:t
+#+OMNIX_ACRONYM: uad:UAD:Unused Acronym Definition
+#+OMNIX_ACRONYM_PROCESSOR: latex:gls link
 
 * Test prints acronyms
 #+PRINT_ACRONYMS:
 
 * Test commands
-Here we will use [[gls:tbd]]. Since we have used it already it should be short this time [[gls:tbd]].
+Here we will use [[acr:tbd]]. Since we have used it already it should be short this time [[acr:tbd]].
 
-We can get the full definition again [[acrfull:tbd]], and the long [[acrlong:tbd]].
+We can get the full definition again [[acr/full:tbd]], and the long [[acr/long:tbd]].
 
-We can display the short name for an unused acronym [[acrshort:idk]].
+We can display the short name for an unused acronym [[acr/short:idk]].
 
-To check acronyms can be defined across keyword header arguments here's another [[gls:lol]].
+To check acronyms can be defined across keyword header arguments here's another [[acr:lol]].
