@@ -24,6 +24,7 @@
           tex
           libreoffice
           zip
+          pandoc
           (python3.withPackages (p: [ p.matplotlib ]))
         ]);
       };

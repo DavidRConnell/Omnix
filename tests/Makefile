@@ -7,7 +7,7 @@ ifeq ($(strip $(TEST_FILES)),)
 endif
 
 ifeq ($(strip $(TEST_FILES)),)
-	TEST_EXTS := html tex txt md
+	TEST_EXTS := html tex txt md docx
 endif
 
 ifeq ($(strip $(REFERENCE_FILES)),)
@@ -34,9 +34,13 @@ define EXPORTER
 	@echo
 endef
 
+%.docx: %.md
+	@echo Building: "$@"
+	pandoc -i "$<" -o "$@"
+
 %.tex: CONVERT += -l init-pdf-ox.el
 %.md: CONVERT += --eval "(require 'ox-md)"
-$(foreach ext,$(TEST_EXTS),$(eval $(call EXPORTER,$(ext))))
+$(foreach ext,$(filter-out docx,$(TEST_EXTS) md),$(eval $(call EXPORTER,$(ext))))
 
 FIG_NAME := images/lines
 test_sansext.html: $(FIG_NAME).svg
