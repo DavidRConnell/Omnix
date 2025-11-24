@@ -1,6 +1,7 @@
 export TOP_DIR := $(PWD)
 export SRC_FILES := $(wildcard $(TOP_DIR)/*.el)
 export TEST_FILES
+export REFERENCE_FILES
 export LATEX ?= lualatex
 
 EMACS ?= emacs
@@ -12,6 +13,10 @@ export CONVERT := $(EMACS) -Q --batch $(LOAD_PATH) --eval $(INIT_EL)
 .PHONY: check
 check:
 	$(MAKE) -C tests check
+
+.PHONY: references
+references:
+	$(MAKE) -C tests references
 
 .PHONY: check-pdfs
 check-pdfs:

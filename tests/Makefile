@@ -8,13 +8,22 @@ ifeq ($(strip $(TEST_FILES)),)
 	TEST_FILES := $(wildcard test_*.org)
 endif
 
+ifeq ($(strip $(REFERENCE_FILES)),)
+	REFERENCE_FILES := $(wildcard reference_*.org)
+endif
+
 TEST_OUTPUTS := $(foreach ext,$(TEST_EXTS),$(TEST_FILES:.org=.$(ext)))
+REFERENCE_OUTPUTS := $(foreach ext,$(TEST_EXTS),$(REFERENCE_FILES:.org=.$(ext)))
+REFERENCE_OUTPUTS += $(REFERENCE_FILES:.org=.pdf)
 
 .PHONY: all
 all: check
 
 .PHONY: check
 check: $(TEST_OUTPUTS)
+
+.PHONY: references
+references: $(REFERENCE_OUTPUTS)
 
 define EXPORTER
 %.$(1): %.org $(SRC_FILES)
@@ -52,4 +61,6 @@ clean:
 .PHONY: clean-dist
 clean-dist: clean
 	rm -f $(TEST_OUTPUTS)
+	rm -f $(REFERENCE_OUTPUTS)
 	rm -f $(TEST_FILES:.org=.pdf)
+	rm -f $(REFERENCE_FILES:.org=.pdf)

@@ -1,0 +1,20 @@
+#+TITLE: Quick test of how linking usually expands
+#+AUTHOR: Omnix
+
+* Section 1
+:PROPERTIES:
+:CUSTOM_ID: sec:first
+:END:
+aeotsn uhsaetno hsneth saneth sneth naoehu sntahe usntahe this
+
+#+NAME: tab:no1
+#+CAPTION: A table
+| 1 | 2 |
+|---+---|
+| 2 | 4 |
+| 3 | 8 |
+
+* Section 2
+Link to 1 [[#sec:first]]. Link to 1 with desc [[#sec:first][Descriptive link]].
+
+# Link to a table [[#tab:no1]]. Descriptive [[#tab:no1][Number one but descriptive]].
