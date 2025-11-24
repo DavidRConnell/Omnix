@@ -64,6 +64,26 @@ It only creates hyperlinks for the ~acr~ links.
 This can be used with any backend that has hyperlink functions defined for it in the ~omnix-hyperlink.el~ file.
 
 The ~gls~ processor defers acronym management to the ~glossaries~ package and therefore only works with LaTeX derived backends.
+* Text coloring
+Color links allow coloring text for different backends.
+This adds the ~xcolor~ package as a dependency for LaTeX backends.
+Naturally, text coloring does not work with plain text backends.
+For those a fallback method is used based on the format string in ~omnix-color-fallback~.
+This uses a special format string where ~%s~ will be replaced with the link description and ~%c~ will be replaced with the color name (not the color code).
+Either format argument can be omitted.
+
+Basic usage:
+
+#+begin_src org
+  [[color:red][An important message]]
+#+end_src
+
+Colors can be defined in the header with keyword ~#+OMNIX_COLOR: blue:#0071BC~ or globally in the ~omnix-color-alist~.
+Currently only HTML color codes are supported.
+
+If a color that has not be defined is used, that color will be passed as is to the backend.
+For example, assuming blue is defined as above, ~[[color:blue][Some colorful text]]~ will be passed to HTML as ~<a style="color:#0071BC;">Some colorful text</a>~ whereas if "red" has not been defined the previous example would be transcoded to ~<a style="color:red;">An important message</a>~ allowing the use of predefined colors (but note the potential of backends not have the same list of predefined colors).
+
 * Sansext links
 The ~sansext~ links are transformed into regular ~file~ links after replacing the path's extension with the backend preferred extension (as defined in ~omnix-sansext-extension-alist~).
 These links are intended to be used with images, and likely images that are pragmatically generated, to dynamically select the best image type for the backend.

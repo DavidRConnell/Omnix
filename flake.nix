@@ -12,7 +12,7 @@
           scheme-basic latex-bin latexmk luatex fontspec koma-script luatex85
 
           # Formatting
-          cleveref glossaries siunitx
+          cleveref glossaries siunitx xcolor
 
           # Tables and figures
           caption float;
