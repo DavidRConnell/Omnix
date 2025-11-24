@@ -196,7 +196,8 @@ insert the full definition, otherwise insert only the short form."
 				  #'omnix-acronym--acr-long-plain
 				  #'omnix-acronym--acr-full-plain
 				  (omnix--alist-keys
-				   omnix-hl-link-functions-alist)))
+				   omnix-hl-link-functions-alist)
+				  #'omnix-acronym--link-setup))
 
 (defun omnix-acronym--anchor-name (key)
   "Name the link anchor for KEY."
@@ -216,6 +217,15 @@ acronym will link to."
 		      (omnix-acronym--acr-short-plain key nil))
     (omnix-hl--anchor format (omnix-acronym--anchor-name key)
 		      (omnix-acronym--acr-full-plain key nil))))
+
+(defun omnix-acronym--link-setup (info backend)
+  "Set up code for the link processor.
+
+When BACKEND is latex, modify INFO to make sure the hyperref package is used."
+
+  (if (org-export-derived-backend-p backend 'latex)
+      (omnix--add-latex-package "hyperref" info)
+    info))
 
 (defvar omnix-acronym--gls-processor
   (omnix-acronym-create-processor "acr-gls"
@@ -254,7 +264,7 @@ TYPE should be the name of a LaTeX command.
 KEY is the acronym's KEY."
   (format "\\acrfull{%s}" key))
 
-(defun omnix-acronym--gls-setup (info)
+(defun omnix-acronym--gls-setup (info _)
   "Add filters to INFO communication channel."
   (let ((acronym-definitions (plist-get info :omnix-acronyms))
 	(current-headers (plist-get info :latex-header))
@@ -362,7 +372,7 @@ Returns the modified INFO."
 	 info
 	 omnix-acronym--known-processors-alist))
   (omnix-acronym--register-acronyms info)
-  (omnix-processor--run-setup omnix-acronym--processor info))
+  (omnix-processor--run-setup omnix-acronym--processor info backend))
 
 (add-to-list 'org-export-filter-options-functions
 	     #'omnix-acronym--initialize-acronym-processor)

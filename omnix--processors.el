@@ -76,7 +76,8 @@ beginning of the export process (in `org-export-filter-options-functions'
 likely) to allow adding any org-export hooks the processor needs by modifying
 the info plist.
 
-The SETUP functions should accept and return the info plist."
+The SETUP functions should accept an info plist and backend and return the info
+plist."
   (let ((backends (if (and backends (symbolp backends))
 		      (list backends)
 		    backends)))
@@ -163,13 +164,15 @@ Where INFO is a communication channel containing the parsed OPTION."
 			     known-processors)))
 
 
-(defun omnix-processor--run-setup (processor info)
+(defun omnix-processor--run-setup (processor info backend)
   "Run PROCESSOR's setup function if it exists.
+
+Forwards the INFO plist and export BACKEND to the setup code.
 
 The setup function should return the INFO communication channel."
   (let ((setup (omnix-processor--get-function processor "setup")))
     (if setup
-	(funcall setup info)))
+	(funcall setup info backend)))
   info)
 
 (provide 'omnix--processors)

@@ -43,15 +43,16 @@ non-nil, then return nil."
 	       (lambda (key search-term)
 		 (org-export-derived-backend-p search-term key)))))
 
-;; (defun omnix--add-latex-packages (tree format _)
-;;   "Add the packages collected in `omnix--add-latex-packages' to the TREE."
-;;   (if (eq format 'latex)
-;;       (org-element- keyword)))
-
-;; ;; Make sure this called after other omnix parse tree functions have determined
-;; ;; which packages are needed.
-;; (add-to-list org-export-filter-parse-tree-functions #'omnix--add-latex-packages
-;; 	     'append)
+(defun omnix--add-latex-package (package info)
+  "Modify INFO to ensure PACKAGE is added to the LaTeX preamble."
+  (let ((current-header (plist-get info :latex-header))
+	(new-package (format "\\usepackage{%s}" package)))
+    (setq info
+	  (plist-put info :latex-header
+		     (if (and current-header
+			      (not (string-empty-p current-header)))
+			 (concat current-header "\n" new-package)
+		       new-package)))))
 
 (provide 'omnix--utils)
 ;;; omnix--utils.el ends here
