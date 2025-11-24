@@ -18,18 +18,21 @@ check: $(TEST_OUTPUTS)
 
 define EXPORTER
 %.$(1): %.org $(SRC_FILES)
-	@echo Building "$$@" from "$$^"
-	$(CONVERT) --eval '(batch-ox-export "$$@" "$$<")'
+	@echo Building: "$$@"
+	$$(CONVERT) --eval '(batch-ox-export "$$@" "$$<")'
+	@echo
 endef
 
+%.tex: CONVERT += -l init-pdf-ox.el
 $(foreach ext,$(TEST_EXTS),$(eval $(call EXPORTER,$(ext))))
 
 .PHONY: pdfs
-pdfs: $(TEST_FILES:.org,.pdf)
+pdfs: $(TEST_FILES:.org=.pdf)
 
 %.pdf: %.tex
-	@[ -d build ] || build
+	@$(shell [[ -d build ]] || build)
 	latexmk -$(LATEX) -g -outdir="build" $<
+	mv build/*.pdf "$@"
 
 .PHONY: clean
 clean:
