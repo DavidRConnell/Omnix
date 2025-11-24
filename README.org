@@ -14,6 +14,24 @@ The ~omnix-acronym~ will provide this same functionality but from within the exp
 This package does not intend on fully porting the LaTeX packages it supports.
 Rather the goal is to produce an incrementally larger set of functionality as needed to produce files.
 
+* Basic usage
+With the package location added to your ~load-path~, you can load it with the usual ~require~:
+
+#+begin_src elisp
+  (add-to-list 'load-path "path/to/package/root")
+  (require 'omnix)
+#+end_src
+
+This will load the modules that do not have default side effects on outputs (specifically tex).
+One of the goals of this package is to produce minimal tex files that can't be sent elsewhere to generate various other files, as such modules like ~omnix-color~ are not loaded by default as they will cause generated tex files to always load the ~xcolor~ package.
+Other modules, such as ~omnix-acronym~, may add dependencies to tex files, but they only do so when either the default settings are changed or when their features are actually used and can therefore be safely loaded.
+Instead, these modules can be loaded manually, or ~omnix~ makes a ~omnix-global~ function available which will load the remaining modules.
+
+#+begin_src elisp
+  (require 'omnix)
+  (omnix-global)
+#+end_src
+
 * Design principles
 Inspired by ~org-cite~'s use of a citation processor, ~Omnix~ relies on processors to perform the specific transformation whenever there are multiple ways to handle a function.
 This allows users to set an alist associating backends with preferred processors.
@@ -23,7 +41,7 @@ More sophisticated processors can then be specific to a backend or a set of back
 Given that the features provided by ~Omnix~, tend to be based on LaTeX packages, there will often be a processor named after the LaTeX package it was derived from (such as the ~gls~ acronym processor).
 These processors will be LaTeX (and derived) backend specific and will defer processing to the LaTeX package.
 
-When processors are used, there will be a global variable that can be edited to set the default processors to use (~omnix-*-processor-alist~, where ~*~ is a wildcard for the specific submodule).
+When processors are used, there will be a global variable that can be edited to set the default processors to use (~omnix-*-processor-alist~, where ~*~ is a wildcard for the specific module).
 The processor can also be set at the buffer level with a keyword:
 
 #+begin_src org
@@ -36,7 +54,7 @@ When processor is set on it's own, that will be used for any backend that does w
 See the test Org files to get a quick view of common usage.
 
 * Acronyms
-The ~omnix-acronym~ submodule provides features similar to the ~glossaries~ LaTeX package.
+The ~omnix-acronym~ module provides features similar to the ~glossaries~ LaTeX package.
 This provides four new link types for managing acronyms: ~acr~, ~acr/short~, ~acr/long~, and ~acr/full~.
 The ~acr~ links is the primary link type, this will expand to the full form the first time the acronym is written, otherwise it will be printed as the acronym.
 This removes the need of tracking where you first used an acronym when you edit your draft.
@@ -58,7 +76,7 @@ As a full example:
 
 Note: Acronym must be defined one per keyword.
 
-This submodule currently has three processors, ~plain~, ~link~, and ~gls~.
+This module currently has three processors, ~plain~, ~link~, and ~gls~.
 The ~link~ processor will link later ~[[acr:key]]~ links to the first use (i.e. the definition).
 It only creates hyperlinks for the ~acr~ links.
 This can be used with any backend that has hyperlink functions defined for it in the ~omnix-hyperlink.el~ file.
@@ -95,10 +113,10 @@ As an example, if this PNG ~sansext~ link is in the Org file ~[[sansext:lines.pn
 See the ~tests/Makefile~ for an example of a ~make~ recipe that ensures the output is dependent on the generation of the right figures.
 
 * Extending
-Whenever a submodule uses processors, users can create new processors with the ~omnix-*-create-processor~ functions.
+Whenever a module uses processors, users can create new processors with the ~omnix-*-create-processor~ functions.
 Those can then be added to the relevant processor alist.
 Processors are plists with at a minimum a name and an optional backend list when it is specific to one or more backends and an optional setup function (see ~omnix--processors.el~ for more information on the generic processor interface).
 
-Submodules will extend that interface to require a set of functions for performing specific tasks.
+Modules will extend that interface to require a set of functions for performing specific tasks.
 Often this will mean a function per link that is handled.
 See the creation functions help for the exact functions required.

@@ -28,17 +28,17 @@
 ;;
 ;; The create processor function should be treated as a "base class" that
 ;; implements a common processor protocol related to processor choice within
-;; submodules. Each submodule that needs protocols is expected to define it's
-;; own creation functions around the base function defined here.
+;; modules. Each module that needs protocols is expected to define it's own
+;; creation functions around the base function defined here.
 ;;
-;; Processors are plists of functions needed to perform the submodules text
+;; Processors are plists of functions needed to perform the modules text
 ;; transformations. The base protocol defines backends the protocol can handle
-;; and optional setup functions to be run before and after
-;; processing. Multiple processors can be grouped together in a single name
-;; with backend specific implementations (for example, acronyms has a "link"
-;; group which adds hyperlinking to acronyms, requiring different syntax for
-;; different backends). Each processor is stored in a submodule specific alist
-;; of known processors associating a processor group with 1 or more processor
+;; and optional setup functions to be run before and after processing. Multiple
+;; processors can be grouped together in a single name with backend specific
+;; implementations (for example, acronyms has a "link" group which adds
+;; hyperlinking to acronyms, requiring different syntax for different
+;; backends). Each processor is stored in a module specific alist of known
+;; processors associating a processor group with 1 or more processor
 ;; implementations. To select a processor, an alist associating backends with
 ;; processor names is used to determine the preferred processor, the known
 ;; processor alist is then scanned to find the first processor that can handle
@@ -47,13 +47,13 @@
 ;; where a processor group has a generic (backend independent) processor, care
 ;; should be taken to ensure it is at the end of the list for that group.
 ;;
-;; When possible, all submodules using processors should define a fallback
+;; When possible, all modules using processors should define a fallback
 ;; processor (typically "plain") that is based on pure text transformations and
 ;; is therefore independent on the export backend. When selecting a processor,
 ;; if the processor initially chosen based on the processor alist is not
 ;; compatible with the backend, the fallback processor will be given instead. A
 ;; "plain" variant may not always be feasible (for example if processors is
-;; used in the color submodule, it would not be possible to implement pure text
+;; used in the color module, it would not be possible to implement pure text
 ;; color). In these cases it should still be preferred to define a default
 ;; behavior through a "plain" processor (such as emphasizing the text in lieu
 ;; of font color).
@@ -71,7 +71,7 @@ backend and therefore work for any. BACKENDS can be nil, a backend symbol or a
 list of symbols.
 
 Extra SETUP functions can be added to the processor. Use of these
-functions is dependent on the specific submodule but should be called at the
+functions is dependent on the specific module but should be called at the
 beginning of the export process (in `org-export-filter-options-functions'
 likely) to allow adding any org-export hooks the processor needs by modifying
 the info plist.

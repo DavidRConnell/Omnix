@@ -6,7 +6,7 @@ export TEST_EXTS
 export LATEX ?= lualatex
 
 EMACS ?= emacs
-INIT_EL ?= "(progn (require 'omnix) (require 'batch-ox))"
+INIT_EL ?= "(progn (require 'omnix) (require 'batch-ox) (omnix-global))"
 LOAD_PATH ?= -L $(TOP_DIR) -L $(TOP_DIR)/vendor/batch-ox
 export CONVERT := $(EMACS) -Q --batch $(LOAD_PATH) --eval $(INIT_EL)
 
