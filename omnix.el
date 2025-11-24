@@ -36,6 +36,7 @@
 ;;; Code:
 
 (require 'omnix-acronym)
+(require 'omnix-sansext)
 
 (provide 'omnix)
 ;;; omnix.el ends here.

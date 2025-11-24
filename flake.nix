@@ -19,7 +19,13 @@
       };
     in {
       devShells.${system}.default = pkgs.mkShellNoCC {
-        packages = (with pkgs; [ gnumake tex libreoffice zip ]);
+        packages = (with pkgs; [
+          gnumake
+          tex
+          libreoffice
+          zip
+          (python3.withPackages (p: [ p.matplotlib ]))
+        ]);
       };
     };
 }

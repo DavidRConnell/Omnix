@@ -1,4 +1,4 @@
-TEST_EXTS := html tex txt
+TEST_EXTS := html tex txt md
 
 # If TEST_FILES passed in top level call, use those otherwise use the wildcard
 # to populate TEST_FILES. Effectively TEST_FILES ?=, but the top level export
@@ -27,6 +27,15 @@ endef
 %.md: CONVERT += --eval "(require 'ox-md)"
 $(foreach ext,$(TEST_EXTS),$(eval $(call EXPORTER,$(ext))))
 
+FIG_NAME := images/lines
+test_sansext.html: $(FIG_NAME).svg
+test_sansext.tex: $(FIG_NAME).pdf
+test_sansext.txt: $(FIG_NAME).png
+test_sansext.md: $(FIG_NAME).svg
+
+images/%: fixtures/make_figs.py
+	python fixtures/make_figs.py "$@"
+
 .PHONY: pdfs
 pdfs: $(TEST_FILES:.org=.pdf)
 
@@ -37,6 +46,10 @@ pdfs: $(TEST_FILES:.org=.pdf)
 
 .PHONY: clean
 clean:
+	rm -rf build
+	rm -f $(FIG_NAME).*
+
+.PHONY: clean-dist
+clean-dist: clean
 	rm -f $(TEST_OUTPUTS)
 	rm -f $(TEST_FILES:.org=.pdf)
-	rm -rf build

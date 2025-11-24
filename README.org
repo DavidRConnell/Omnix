@@ -64,6 +64,15 @@ It only creates hyperlinks for the ~acr~ links.
 This can be used with any backend that has hyperlink functions defined for it in the ~omnix-hyperlink.el~ file.
 
 The ~gls~ processor defers acronym management to the ~glossaries~ package and therefore only works with LaTeX derived backends.
+* Sansext links
+The ~sansext~ links are transformed into regular ~file~ links after replacing the path's extension with the backend preferred extension (as defined in ~omnix-sansext-extension-alist~).
+These links are intended to be used with images, and likely images that are pragmatically generated, to dynamically select the best image type for the backend.
+By default, LaTeX will use PDFs, HTML (and derived backends including markdown) will use SVGs, and everything else uses PNGs.
+No attempt at being clever in the selection process is made, the links are blindly converted, if there is no file with the selected extension the export fail.
+
+As an example, if this PNG ~sansext~ link is in the Org file ~[[sansext:lines.png]]~, it will be translated to ~[[file:lines.pdf]]~ when exporting to PDF and to ~[[file:lines.svg]]~ when exporting to HTML.
+(Note the extension is optional ~[[sansext:lines]]~ would work as well.)
+See the ~tests/Makefile~ for an example of a ~make~ recipe that ensures the output is dependent on the generation of the right figures.
 
 * Extending
 Whenever a submodule uses processors, users can create new processors with the ~omnix-*-create-processor~ functions.

@@ -1,0 +1,17 @@
+#+TITLE: Test sansext links
+#+AUTHOR: Omnix
+
+* Test sansext links pick the correct image for the output type
+#+CAPTION: A regular figure link
+[[file:images/lines.png]]
+
+a second figure.
+
+#+CAPTION: A sansext substition link.
+[[sansext:images/lines.pdf]]
+
+#+CAPTION: Confirm it works with and without an extension given.
+[[sansext:images/lines]]
+
+* Test with description
+[[sansext:images/lines][This is a description]]
