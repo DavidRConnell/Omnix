@@ -2,6 +2,7 @@ export TOP_DIR := $(PWD)
 export SRC_FILES := $(wildcard $(TOP_DIR)/*.el)
 export TEST_FILES
 export REFERENCE_FILES
+export TEST_EXTS
 export LATEX ?= lualatex
 
 EMACS ?= emacs
