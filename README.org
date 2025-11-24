@@ -7,43 +7,69 @@ Like ~org-cite~ did to citation management, ~Omnix~ intends to do to some other 
 
 The primary focus is writing the logic of some common LaTeX packages in emacs-lisp and providing new org-mode links and macros for them.
 This can be used to simplify exporting to multiple backends and to generate a tex file that only depends on basic LaTeX packages typically allowed by journals while continuing to let the computer manage tedious and error prone tasks.
-For instance, you can continue to use ~gls~ to handle acronyms for you but they will be expanded on export so the final tex file does not depend on the ~glossaries~ package.
-While this should also allow ~ox~ to produce an HTML or docx/odt file.
+
+For instance, the ~glossaries~ LaTeX package manages acronyms for you, automatically printing the full form on the first use and just the acronym for the remaining uses.
+The ~omnix-acronym~ will provide this same functionality but from within the exporter, so it will work for all backends and will produce a tex file that doesn't depend on the ~glossaries~ package, which many journals don't allow.
 
 This package does not intend on fully porting the LaTeX packages it supports.
 Rather the goal is to produce an incrementally larger set of functionality as needed to produce files.
 
-* Working
-* In progress
-** Basic
-Similar to how ~org-cite~ has an option to choose to use defer management to LaTeX native citation engines like ~biblatex~ or to always perform the citation management itself, ~omnix~ should have a options to expand links to LaTeX commands when exporting to LaTeX or to expand values itself.
-Something like ~#+OMNIX_CREF_EXPORT: latex:ref link:t~ where options could be ~cref~ (replace the link with ~cref~ and let it handle everything), ~ref~ (determine the element type and places it in front of the reference then pass the label to ~ref~), or ~nil~ to place the element type and handling numbering.
-So ~latex~ would mean this is how to handle the latex backend and link would provide whether to set a link to the element being referenced.
-If set to ~cref~, this should include the ~cref~ usepackage call in the tex file with needed options to get linking set.
-** ~glossaries~
-- Allow the definition of acronyms in the Org header.
-- Links analogous to ~gls~, ~acrlong~, and ~acrshort~.
-- ~#+PRINT_GLOSSARY~ and ~#+PRINT_ACRONYMS~ macros analogous to ~org-cite~'s ~#+PRINT_BIBLIOGRAPHY~ macro.
-- Toggle header argument for whether to link to the original gls call / the definition in the glossary or acronym list.
-** ~xcolor~
-- Add header argument for defining colors with HTML color codes.
-- Add link for coloring text.
-  #+BEGIN_VERBATIM
-  [[color:red][This should be red]]
-  #+END_VERBATIM
+* Design principles
+Inspired by ~org-cite~'s use of a citation processor, ~Omnix~ relies on processors to perform the specific transformation whenever there are multiple ways to handle a function.
+This allows users to set an alist associating backends with preferred processors.
+Generally, when processors are used, there will be a ~plain~ processor which performs pure text transformations.
+This ensures that the processor is backend independent.
+More sophisticated processors can then be specific to a backend or a set of backends.
+Given that the features provided by ~Omnix~, tend to be based on LaTeX packages, there will often be a processor named after the LaTeX package it was derived from (such as the ~gls~ acronym processor).
+These processors will be LaTeX (and derived) backend specific and will defer processing to the LaTeX package.
 
-  Should fall back to emphasis or nothing for backends that don't support colored text (like ascii).
-** ~clever ref~
-- Ref links that include the type of the thing being cross-referenced automatically. Should have a similar syntax as the ~org-cite~ citations.
-- Header options for how different elements should be named (analogous to ~cref~'s format settings)
-- Potentially flags for setting ~\frontmatter~, ~\appendix~, etc (even add a SI one) which modify the counter used and the formatting convention.
-- Option to let tex handle the actual referencing with it's usual ~ref~ commands while other backends would rely on the ~omnix~ to handle counting.
-- Toggle header argument for linking to element being referenced.
-- Potentially subfigure linking.
-** ~siunitx~
-- Basic command for adding grouping for numbers.
-- Possibly a command for handling units but may not be too useful outside of LaTeX.
-** ~authblk~
-- Extend or add to the ~AUTHOR~ keyword a way to input multiple authors and define affiliations that can associated with each author.
-** ~sansext~ links
-The sansext link can be used to defer choice of figure type to ~omnix~ which will make an output specific decision, preferring PDF files for tex / PDF output, SVG for HTML, and PNG for docx.
+When processors are used, there will be a global variable that can be edited to set the default processors to use (~omnix-*-processor-alist~, where ~*~ is a wildcard for the specific submodule).
+The processor can also be set at the buffer level with a keyword:
+
+#+begin_src org
+  ,#+OMNIX_ACRONYM_PROCESSOR: latex:gls link
+#+end_src
+
+To set a processor for a specific backend, use the ~backend:processor~ notation.
+When processor is set on it's own, that will be used for any backend that does was not explicitly given a processor.
+
+See the test Org files to get a quick view of common usage.
+
+* Acronyms
+The ~omnix-acronym~ submodule provides features similar to the ~glossaries~ LaTeX package.
+This provides four new link types for managing acronyms: ~acr~, ~acr/short~, ~acr/long~, and ~acr/full~.
+The ~acr~ links is the primary link type, this will expand to the full form the first time the acronym is written, otherwise it will be printed as the acronym.
+This removes the need of tracking where you first used an acronym when you edit your draft.
+The other link types will always print the short, long, or full forms respectively.
+For the acronym "GUI", the short form is the acronym itself "GUI", the long form is written out "Graphical User Interface", and the full form is the definition of the acronym "Graphical User Interface (GUI)."
+
+To use acronyms, they must be defined user Org keywords in the form ~key:short:long~, where ~key~ is what is used to identify the acronym in the links.
+As a full example:
+
+#+begin_src org
+  ,#+OMNIX_ACRONYM: gui:GUI:Graphical User Interface
+  ,#+OMNIX_ACRONYM: tui:TUI:Text User Interface
+  ,#+OMNIX_ACRONYM: cli:CLI:Command-Line Interface
+
+  The application's behavior can be modified by passing arguments to the [[acr:cli]] (expands to full form) or by configuration with its [[acr:gui]] (also expands to full form).
+  When using the [[acr:cli]] (expands to "CLI"), ...
+  As opposed to a [[acr:gui]], a [[acr/long:tui]] (expands to "Text User Interface")...
+#+end_src
+
+Note: Acronym must be defined one per keyword.
+
+This submodule currently has three processors, ~plain~, ~link~, and ~gls~.
+The ~link~ processor will link later ~[[acr:key]]~ links to the first use (i.e. the definition).
+It only creates hyperlinks for the ~acr~ links.
+This can be used with any backend that has hyperlink functions defined for it in the ~omnix-hyperlink.el~ file.
+
+The ~gls~ processor defers acronym management to the ~glossaries~ package and therefore only works with LaTeX derived backends.
+
+* Extending
+Whenever a submodule uses processors, users can create new processors with the ~omnix-*-create-processor~ functions.
+Those can then be added to the relevant processor alist.
+Processors are plists with at a minimum a name and an optional backend list when it is specific to one or more backends and an optional setup function (see ~omnix--processors.el~ for more information on the generic processor interface).
+
+Submodules will extend that interface to require a set of functions for performing specific tasks.
+Often this will mean a function per link that is handled.
+See the creation functions help for the exact functions required.
