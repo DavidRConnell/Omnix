@@ -85,7 +85,7 @@ Anchors are created based on the export BACKEND."
 
 The function should take an anchor KEY and a DESCRIPTION to write in the link.
 
-See also `omnix-create-link-format-alist'.")
+See also `omnix-hl-anchor-functions-alist'.")
 
 (defun omnix-hl--link (backend key description)
   "Create an anchor around DESCRIPTION with identifier KEY.
