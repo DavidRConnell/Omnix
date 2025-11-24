@@ -83,8 +83,8 @@ plist."
 		    backends)))
     (list :name name :backends backends :setup setup)))
 
-(defun omnix-processor--select (format preference-alist known-processors)
-  "Given the export FORMAT and user's PREFERENCE-ALIST, choose a processor.
+(defun omnix-processor--select (backend preference-alist known-processors)
+  "Given the export BACKEND and user's PREFERENCE-ALIST, choose a processor.
 
 The PREFERENCE-ALIST should associate export backends with a processor group.
 Using the value associated with t as the default for any backends without an
@@ -96,11 +96,11 @@ compatibility, the first found is returned. If there are no compatible
 processors in the group, the processor associated with fallback is returned. An
 error is thrown if the fallback group is needed but has not been defined in the
 PREFERENCE-ALIST."
-  (let* ((preference (omnix--alist-get-backend format preference-alist))
+  (let* ((preference (omnix--alist-get-backend backend preference-alist))
 	 (group (alist-get preference known-processors))
 	 (selection (cl-remove-if
 		     (lambda (proc)
-		       (not (omnix-processor--compatible-p format proc)))
+		       (not (omnix-processor--compatible-p backend proc)))
 		     group)))
     (if (> (length selection) 0)
 	(car selection)
@@ -110,8 +110,8 @@ PREFERENCE-ALIST."
   "Return the name of PROCESSOR."
   (plist-get processor :name))
 
-(defun omnix-processor--compatible-p (format processor)
-  "Decide if the PROCESSOR is compatible with FORMAT."
+(defun omnix-processor--compatible-p (backend processor)
+  "Decide if the PROCESSOR is compatible with BACKEND."
   (let ((compatible-with (plist-get processor :backends)))
     (if (not compatible-with)
 	;; Admittedly odd behavior, but the logic is if the processor doesn't
@@ -119,7 +119,7 @@ PREFERENCE-ALIST."
 	;; backend.
 	t
       (> (length (cl-remove-if
-		  (lambda (test) (not (org-export-derived-backend-p format test)))
+		  (lambda (test) (not (org-export-derived-backend-p backend test)))
 		  compatible-with))
 	 0))))
 

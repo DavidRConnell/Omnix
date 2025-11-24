@@ -203,19 +203,19 @@ insert the full definition, otherwise insert only the short form."
   "Name the link anchor for KEY."
   (format "omnix-acr-%s" key))
 
-(defun omnix-acronym--acr-link (key format)
+(defun omnix-acronym--acr-link (key backend)
   "Insert the definition or acronym depending on if KEY has been used yet.
 
 If this is the first time the acronym has been used with the acr link type,
 insert the full definition, otherwise insert only the short form.
 
-Unlike the plain variant, this adds a FORMAT dependent link. The first instance
+Unlike the plain variant, this adds a BACKEND dependent link. The first instance
 of the acronym will become a link anchor that the remaining future uses of the
 acronym will link to."
   (if (omnix-acronym--acronym-seen-p key)
-      (omnix-hl--link format (omnix-acronym--anchor-name key)
+      (omnix-hl--link backend (omnix-acronym--anchor-name key)
 		      (omnix-acronym--acr-short-plain key nil))
-    (omnix-hl--anchor format (omnix-acronym--anchor-name key)
+    (omnix-hl--anchor backend (omnix-acronym--anchor-name key)
 		      (omnix-acronym--acr-full-plain key nil))))
 
 (defun omnix-acronym--link-setup (info backend)
@@ -301,9 +301,9 @@ KEY is the acronym's KEY."
   Link's of this type should not have a DESCRIPTION. Including a description
   will result in an error.
 
-  FORMAT is the backend." type)))
+  BACKEND is the backend." type)))
     (defalias func-name
-      (lambda (path description format)
+      (lambda (path description backend)
 	(:documentation docstring)
 
 	(if description
@@ -314,7 +314,7 @@ KEY is the acronym's KEY."
 	  (if (not func)
 	      (error "Function \"%s\" not defined for processor \"%\"" type
 		     (omnix-processor--name omnix-acronym--processor)))
-	  (funcall func path format))))
+	  (funcall func path backend))))
     func-name))
 
 (dolist (type '("acr" "acr/long" "acr/short" "acr/full"))
