@@ -29,15 +29,8 @@
 
 (require 'ox)
 
-(defvar omnix--additional-latex-packages '()
-  "List of LaTeX packages required for Omnix links.")
-
-(defun omnix--add-latex-package (package)
-  "Add PACKAGE to the list of required LaTeX packages."
-  (add-to-list omnix--additional-latex-packages package))
-
 (defun omnix--alist-keys (alist)
-  "Return a list of keys in the ALIST"
+  "Return a list of keys in the ALIST."
   (mapcar #'car alist))
 
 (defun omnix--alist-get-backend (backend alist &optional strict-p)

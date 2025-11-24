@@ -135,73 +135,13 @@ Unless DRY-RUN is non-nil, mark this KEY as seen."
   "Register the SHORT and LONG forms of the acronym associated with KEY."
   (push (list (intern key) short long) omnix-acronym--acronym-alist))
 
-(defun omnix-acronym--clean (_)
-  "Reset globals used for tracking acronym elements."
-  (setq omnix-acronym--acronym-alist omnix-acronym-alist
-	omnix-acronym--acronym-seen-alist '()
-	omnix-acronym--processor-alist omnix-acronym-processor-alist))
-
-;;; Prepare environment for exports
-(add-hook 'org-export-before-processing-hook #'omnix-acronym--clean)
-
-;;; Set options from header keywords.
-(add-to-list 'org-export-options-alist
-	     '(:omnix-acronyms "OMNIX_ACRONYM" nil nil newline))
-(add-to-list 'org-export-options-alist
-	     '(:omnix-acronym-processor "OMNIX_ACRONYM_PROCESSOR" nil nil split))
-
-(defvar omnix-acronym--processor-alist '()
-  "Internal processor alist to override global preferences.")
-
-(defun omnix-acronym--split-acronym-definition (definition)
-  "Split the keyword acronym DEFINITION from key:short:long."
-  (let ((parts (string-split definition ":")))
-    (if (< (length parts) 3)
-	(message "Skipping malformed acronym: %s" definition)
-      (pcase-let ((`(,key ,short . ,rest) parts))
-	(list key short (string-join rest ":"))))))
-
-(defun omnix-acronym--register-acronyms (tree _ info)
-  "Extract acronyms from INFO plist defined using OMNIX_ACRONYM keywords.
-
-TREE is passed through unmodified."
-  (let* ((acronyms-raw (plist-get info :omnix-acronyms))
-	 (acronyms (if acronyms-raw (string-split acronyms-raw "\n"))))
-    (dolist (def acronyms)
-      (apply #'omnix-acronym--register-acronym
-	     (omnix-acronym--split-acronym-definition def))))
-  tree)
-
-(defun omnix-acronym--set-processor (info)
-  "Parse the INFO plist to set the buffer level acronym processor choices."
-  (let ((processors (plist-get info :omnix-acronym-processor)))
-    (dolist (proc processors)
-      (let ((parts (string-split proc ":")))
-	(if (eq (length parts) 1)
-	    (push `(t . ,(intern (car parts))) omnix-acronym--processor-alist)
-	  (push `(,(intern (car parts)) . ,(intern (cadr parts)))
-		omnix-acronym--processor-alist))))))
-
-(defun omnix-acronym--set-options (tree _ info)
-  "Set omnix options from the keyword arguments in INFO.
-
-Returns AST TREE unmodified."
-  (omnix-acronym--set-processor info)
-  tree)
-
-(add-to-list 'org-export-filter-parse-tree-functions
-	     #'omnix-acronym--register-acronyms)
-(add-to-list 'org-export-filter-parse-tree-functions
-	     #'omnix-acronym--set-options)
-
-
 ;;; Processor management
 (defvar omnix-acronym--known-processors-alist '()
   "Store all known processor groups.")
 
-(defun omnix-acronym-create-processor (acr acr-short acr-long acr-full
-					   &optional backends setup teardown)
-  "Create a new acronym processor.
+(defun omnix-acronym-create-processor (name acr acr-short acr-long acr-full
+					    &optional backends setup)
+  "Create a new acronym processor, NAME.
 
 All acronym processors must implement a ACR function that defines the defualt
 logic for printing an acronym, a ACR-SHORT function for printing the short form
@@ -213,43 +153,45 @@ acronym and the short form the rest of the time.
 
 BACKENDS, SETUP, and TEARDOWN are the standard optional values for
 `omnix-processor--create'."
-  (let ((processor (omnix-processor--create backends setup teardown))
+  (let ((processor (omnix-processor--create name backends setup))
 	(acr-plist (list :acr acr
 			 :acr/short acr-short
 			 :acr/long acr-long
 			 :acr/full acr-full)))
-   (append  processor acr-plist)))
+    (append processor acr-plist)))
 
 (defvar omnix-acronym--plain-processor
- (omnix-acronym-create-processor #'omnix-acronym--acr-plain
+  (omnix-acronym-create-processor "acr-plain"
+				  #'omnix-acronym--acr-plain
 				  #'omnix-acronym--acr-short-plain
 				  #'omnix-acronym--acr-long-plain
 				  #'omnix-acronym--acr-full-plain))
 
 (defun omnix-acronym--acr-short-plain (key _)
- "Always expand the link to the KEY's short form."
- (format "%s" (omnix-acronym--get-short key)))
+  "Always expand the link to the KEY's short form."
+  (format "%s" (omnix-acronym--get-short key)))
 
 (defun omnix-acronym--acr-long-plain (key _)
- "Always expand the link to the KEY's long form."
- (format "%s" (omnix-acronym--get-long key)))
+  "Always expand the link to the KEY's long form."
+  (format "%s" (omnix-acronym--get-long key)))
 
 (defun omnix-acronym--acr-full-plain (key _)
- "Always expand the link to the KEY's full acronym definition."
- (format "%s (%s)" (omnix-acronym--acr-long-plain key nil)
+  "Always expand the link to the KEY's full acronym definition."
+  (format "%s (%s)" (omnix-acronym--acr-long-plain key nil)
 	  (omnix-acronym--acr-short-plain key nil)))
 
 (defun omnix-acronym--acr-plain (key _)
- "Insert the definition or acronym depending on if KEY has been used yet.
+  "Insert the definition or acronym depending on if KEY has been used yet.
 
 If this is the first time the acronym has been used with the acr link type,
 insert the full definition, otherwise insert only the short form."
- (if (omnix-acronym--acronym-seen-p key)
-     (omnix-acronym--acr-short-plain key nil)
-   (omnix-acronym--acr-full-plain key nil)))
+  (if (omnix-acronym--acronym-seen-p key)
+      (omnix-acronym--acr-short-plain key nil)
+    (omnix-acronym--acr-full-plain key nil)))
 
 (defvar omnix-acronym--link-processor
- (omnix-acronym-create-processor #'omnix-acronym--acr-link
+  (omnix-acronym-create-processor "acr-link"
+				  #'omnix-acronym--acr-link
 				  #'omnix-acronym--acr-short-plain
 				  #'omnix-acronym--acr-long-plain
 				  #'omnix-acronym--acr-full-plain
@@ -257,7 +199,7 @@ insert the full definition, otherwise insert only the short form."
 				   omnix-hl-link-functions-alist)))
 
 (defun omnix-acronym--anchor-name (key)
- "Name the link anchor for KEY."
+  "Name the link anchor for KEY."
   (format "omnix-acr-%s" key))
 
 (defun omnix-acronym--acr-link (key format)
@@ -276,13 +218,13 @@ acronym will link to."
 		      (omnix-acronym--acr-full-plain key nil))))
 
 (defvar omnix-acronym--gls-processor
-  (omnix-acronym-create-processor #'omnix-acronym--acr-gls
+  (omnix-acronym-create-processor "acr-gls"
+				  #'omnix-acronym--acr-gls
 				  #'omnix-acronym--acr-short-gls
 				  #'omnix-acronym--acr-long-gls
 				  #'omnix-acronym--acr-full-gls
 				  'latex
-				  #'omnix-acronym--gls-setup
-				  #'omnix-acronym--gls-teardown))
+				  #'omnix-acronym--gls-setup))
 
 (defun omnix-acronym--acr-gls (key _)
   "Transform a acronym KEY link to LaTeX's acronym commands.
@@ -312,26 +254,25 @@ TYPE should be the name of a LaTeX command.
 KEY is the acronym's KEY."
   (format "\\acrfull{%s}" key))
 
-;; TODO: Need to write filter for converting OMNIX_ACRONYMs to latex
-;; \newacronym{}
-;; Also need to add usepackage for additional latex packages. This will be done
-;; at a omnix level so if multiple modules need to install usepackages to the
-;; preamble they will all get done together.
-;; Will need to add this as hooks during set up hook but will likely also need
-;; to remove them during teardown (where does this go?) to prevent the acronyms
-;; from ending up in the header even after changing to a different processor.
+(defun omnix-acronym--gls-setup (info)
+  "Add filters to INFO communication channel."
+  (let ((acronym-definitions (plist-get info :omnix-acronyms))
+	(current-headers (plist-get info :latex-header))
+	(new-headers))
+    (when (and acronym-definitions (not (string-empty-p acronym-definitions)))
+      (setq new-headers "\\usepackage{glossaries}")
+      (dolist (acr (string-split acronym-definitions "\n" t))
+	(let ((parts (omnix-acronym--split-acronym-definition acr)))
+	  (setq new-headers
+		(concat new-headers "\n"
+			(format "\\newacronym{%s}{%s}{%s}"
+				(car parts) (cadr parts) (caddr parts))))))
 
-;; (defun omnix-acronym--gls-transform-acronym-definitions (keyword _ info)
-;;   (if (string= keyword "OMNIX_ACRONYM:")
-;;       (let* ((raw (get-that keyword))
-;; 	     (def (omnix-acronym--split-acronym-definition raw))))))
-
-(defun omnix-acronym--gls-setup ()
-  ;; (add-to-list org-export-filter-keyword-functions
-  ;; 	       omnix-acronym--gls-transform-acronym-definitions)
-  )
-
-(defun omnix-acronym--gls-teardown ())
+      (setq new-headers (concat new-headers "\n\\makeglossaries"))
+      (setq info (plist-put info :latex-header
+			    (if current-headers
+				(concat current-headers "\n" new-headers)
+			      new-headers))))))
 
 (setq omnix-acronym--known-processors-alist
       `((plain ,omnix-acronym--plain-processor)
@@ -358,11 +299,11 @@ KEY is the acronym's KEY."
 	(if description
 	    (error "Acronym links do not accept descriptions"))
 
-	(let* ((processor
-		(omnix-processor--select format
-					 omnix-acronym--processor-alist
-					 omnix-acronym--known-processors-alist))
-	       (func (plist-get processor (intern (format ":%s" type)))))
+	(let ((func
+	       (omnix-processor--get-function omnix-acronym--processor type)))
+	  (if (not func)
+	      (error "Function \"%s\" not defined for processor \"%\"" type
+		     (omnix-processor--name omnix-acronym--processor)))
 	  (funcall func path format))))
     func-name))
 
@@ -371,6 +312,60 @@ KEY is the acronym's KEY."
 
 ;;; Expand acronym list and acronym macros.
 ;; I think this is the hook needed to expand (org-export-filter-keyword-functions)
+
+;;; Parse options and set up hooks
+(defun omnix-acronym--clean (_)
+  "Reset globals used for tracking acronym elements."
+  (setq omnix-acronym--acronym-alist omnix-acronym-alist
+	omnix-acronym--acronym-seen-alist '()))
+
+(add-hook 'org-export-before-processing-hook #'omnix-acronym--clean)
+
+;;; Set options from header keywords.
+(add-to-list 'org-export-options-alist
+	     '(:omnix-acronyms "OMNIX_ACRONYM" nil nil newline))
+(add-to-list 'org-export-options-alist
+	     '(:omnix-acronym-processor "OMNIX_ACRONYM_PROCESSOR" nil nil split))
+
+(defvar omnix--acronym--processor nil
+  "Store the processor selected for this run.")
+
+(defun omnix-acronym--split-acronym-definition (definition)
+  "Split the keyword acronym DEFINITION from key:short:long."
+  (let ((parts (string-split definition ":")))
+    (if (< (length parts) 3)
+	(message "Skipping malformed acronym: %s" definition)
+      (pcase-let ((`(,key ,short . ,rest) parts))
+	(list key short (string-join rest ":"))))))
+
+(defun omnix-acronym--register-acronyms (info)
+  "Extract acronyms from INFO plist defined using OMNIX_ACRONYM keywords."
+  (let* ((acronyms-raw (plist-get info :omnix-acronyms))
+	 (acronyms (if acronyms-raw (string-split acronyms-raw "\n" t))))
+    (dolist (def acronyms)
+      (apply #'omnix-acronym--register-acronym
+	     (omnix-acronym--split-acronym-definition def))))
+  info)
+
+(defun omnix-acronym--initialize-acronym-processor (info backend)
+  "Initialize the acronym processor using the INFO communication channel.
+
+Uses the export BACKEND to select the processor from the processor preference
+alist.
+
+Returns the modified INFO."
+  (setq omnix-acronym--processor
+	(omnix-processor--select-buffer-processor
+	 backend
+	 omnix-acronym-processor-alist
+	 :omnix-acronym-processor
+	 info
+	 omnix-acronym--known-processors-alist))
+  (omnix-acronym--register-acronyms info)
+  (omnix-processor--run-setup omnix-acronym--processor info))
+
+(add-to-list 'org-export-filter-options-functions
+	     #'omnix-acronym--initialize-acronym-processor)
 
 (provide 'omnix-acronym)
 ;;; omnix-acronym.el ends here

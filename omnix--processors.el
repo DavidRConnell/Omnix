@@ -33,7 +33,7 @@
 ;;
 ;; Processors are plists of functions needed to perform the submodules text
 ;; transformations. The base protocol defines backends the protocol can handle
-;; and optional setup / teardown functions to be run before and after
+;; and optional setup functions to be run before and after
 ;; processing. Multiple processors can be grouped together in a single name
 ;; with backend specific implementations (for example, acronyms has a "link"
 ;; group which adds hyperlinking to acronyms, requiring different syntax for
@@ -63,21 +63,24 @@
 (require 'ox)
 (require 'omnix--utils)
 
-(defun omnix-processor--create (&optional backends setup teardown)
-  "Create processor that handles BACKENDS.
+(defun omnix-processor--create (name &optional backends setup)
+  "Create the processor NAME that handles BACKENDS.
 
 When BACKENDS is left nil, the processor is assumed to not be specific to a
 backend and therefore work for any. BACKENDS can be nil, a backend symbol or a
 list of symbols.
 
-Extra SETUP and TEARDOWN functions can be added to the processor. Use of these
+Extra SETUP functions can be added to the processor. Use of these
 functions is dependent on the specific submodule but should be called at the
-beginning and end of the export process respectively to allow adding (and
-cleaning up) any org-export hooks the processor needs."
+beginning of the export process (in `org-export-filter-options-functions'
+likely) to allow adding any org-export hooks the processor needs by modifying
+the info plist.
+
+The SETUP functions should accept and return the info plist."
   (let ((backends (if (and backends (symbolp backends))
 		      (list backends)
 		    backends)))
-    (list :backends backends :setup setup :teardown teardown)))
+    (list :name name :backends backends :setup setup)))
 
 (defun omnix-processor--select (format preference-alist known-processors)
   "Given the export FORMAT and user's PREFERENCE-ALIST, choose a processor.
@@ -102,6 +105,10 @@ PREFERENCE-ALIST."
 	(car selection)
       (omnix-processor--get-fallback known-processors))))
 
+(defun omnix-processor--name (processor)
+  "Return the name of PROCESSOR."
+  (plist-get processor :name))
+
 (defun omnix-processor--compatible-p (format processor)
   "Decide if the PROCESSOR is compatible with FORMAT."
   (let ((compatible-with (plist-get processor :backends)))
@@ -121,6 +128,49 @@ PREFERENCE-ALIST."
     (if (not fallback)
 	(error "No fallback processor given; cannot handle this backend")
       fallback)))
+
+(defun omnix-processor--get-function (processor name)
+  "Retrieve a function by NAME from the PROCESSOR."
+  (plist-get processor (intern (format ":%s" name))))
+
+(defun omnix-processor--buffer-processor-preferences (global-preferences option info)
+  "Determine the buffer-local preference based on OPTIONS and GLOBAL-PREFERENCES.
+
+Uses buffer keyword OPTIONs stored in communication channel INFO to update the
+GLOBAL-PREFERENCES."
+  (let ((buffer-preferences global-preferences)
+	(buffer-processors (plist-get info option)))
+    (dolist (proc buffer-processors)
+      (let ((parts (string-split proc ":")))
+	(if (eq (length parts) 1)
+	    (push `(t . ,(intern (car parts))) buffer-preferences)
+	  (push `(,(intern (car parts)) . ,(intern (cadr parts)))
+		buffer-preferences))))
+
+    buffer-preferences))
+
+(defun omnix-processor--select-buffer-processor
+    (backend global-preferences option info known-processors)
+  "Select a processor using GLOBAL-PREFERENCES, buffer OPTIONS, and the BACKEND.
+
+The processor is selected from the alist of KNOWN-PROCESSORS.
+
+Where INFO is a communication channel containing the parsed OPTION."
+  (let ((buffer-preferences (omnix-processor--buffer-processor-preferences
+			     global-preferences option info)))
+    (omnix-processor--select backend
+			     buffer-preferences
+			     known-processors)))
+
+
+(defun omnix-processor--run-setup (processor info)
+  "Run PROCESSOR's setup function if it exists.
+
+The setup function should return the INFO communication channel."
+  (let ((setup (omnix-processor--get-function processor "setup")))
+    (if setup
+	(funcall setup info)))
+  info)
 
 (provide 'omnix--processors)
 ;;; omnix--processors.el ends here
