@@ -36,11 +36,16 @@
   "Create link anchor KEY around DESCRIPTION."
   (format "<a id=\"%s\">%s</a>" key description))
 
-;; TODO: Add markdown and odt to both alists.
-;; See ox-odt for adding style / links to odt.
+;; Cannot get odt exporter to work so leaving out of alist until I can test it.
+(defun omnix-hl--anchor-odt (key description)
+  "Create link anchor KEY around DESCRIPTION."
+  (format
+   "<text:bookmark-start text:name=\"%s\"/>%s<text:bookmark-end text:name=\"%s\"/>"
+   key description key))
 
 (defvar omnix-hl-anchor-functions-alist `((latex . ,#'omnix-hl--anchor-latex)
-					  (html . ,#'omnix-hl--anchor-html))
+					  (html . ,#'omnix-hl--anchor-html)
+					  (md . ,#'omnix-hl--anchor-html))
   "An alist associating backends with a function for creating link anchors.
 
 The function should accept KEY for the anchor name and DESCRIPTION for the text
@@ -64,8 +69,18 @@ Anchors are created based on the export BACKEND."
   "Link to a predefined KEY with DESCRIPTION."
   (format "<a href=\"#%s\">%s</a>" key description))
 
+(defun omnix-hl--link-md (key description)
+  "Link to a predefined KEY with DESCRIPTION."
+  (format "[%s](#%s)" description key))
+
+(defun omnix-hl--link-odt (key description)
+  "Link to a predefined KEY with DESCRIPTION."
+  (format "<text:a xlink:type=\"simple\" xlink:href=\"#%s\">%s</text:a>"
+	  key description))
+
 (defvar omnix-hl-link-functions-alist `((latex . ,#'omnix-hl--link-latex)
-					(html . ,#'omnix-hl--link-html))
+					(html . ,#'omnix-hl--link-html)
+					(md . ,#'omnix-hl--link-md))
   "An alist associating backends with a function for linking to a link anchor.
 
 The function should take an anchor KEY and a DESCRIPTION to write in the link.

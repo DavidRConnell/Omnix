@@ -24,6 +24,7 @@ define EXPORTER
 endef
 
 %.tex: CONVERT += -l init-pdf-ox.el
+%.md: CONVERT += --eval "(require 'ox-md)"
 $(foreach ext,$(TEST_EXTS),$(eval $(call EXPORTER,$(ext))))
 
 .PHONY: pdfs

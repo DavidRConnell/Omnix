@@ -18,7 +18,8 @@
           caption float;
       };
     in {
-      devShells.${system}.default =
-        pkgs.mkShellNoCC { packages = (with pkgs; [ gnumake tex ]); };
+      devShells.${system}.default = pkgs.mkShellNoCC {
+        packages = (with pkgs; [ gnumake tex libreoffice zip ]);
+      };
     };
 }

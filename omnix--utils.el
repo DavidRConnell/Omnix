@@ -36,12 +36,16 @@
 (defun omnix--alist-get-backend (backend alist &optional strict-p)
   "Get ALIST items associated with BACKEND.
 
-If BACKEND is not in the ALIST return item associated with t unless STRICT-P is
-non-nil, then return nil."
+Tries to retrieve the exact BACKEND, if that cannot be found, looks for backend
+that it was derived from.
+
+If BACKEND (or a backend BACKEND was derived from) is not in the ALIST return
+item associated with t unless STRICT-P is non-nil, then return nil."
   (let ((backup (if strict-p nil (alist-get t alist))))
-    (alist-get backend alist backup nil
-	       (lambda (key search-term)
-		 (org-export-derived-backend-p search-term key)))))
+    (alist-get backend alist
+	       (alist-get backend alist backup nil
+			  (lambda (key search-term)
+			    (org-export-derived-backend-p search-term key))))))
 
 (defun omnix--add-latex-package (package info)
   "Modify INFO to ensure PACKAGE is added to the LaTeX preamble."
