@@ -51,6 +51,13 @@ The processor can also be set at the buffer level with a keyword:
 To set a processor for a specific backend, use the ~backend:processor~ notation.
 When processor is set on it's own, that will be used for any backend that does was not explicitly given a processor.
 
+To simplify generating output files that depend only on standard packages, there is a ~omnix-plain~ option.
+When this is set to true in a buffer, only plain processors will be used and some other features that depend on non-standard packages will be disabled:
+
+#+begin_src org
+  ,#+OPTIONS: omnix-plain:t
+#+end_src
+
 See the test Org files to get a quick view of common usage.
 
 * Acronyms

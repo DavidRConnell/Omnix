@@ -123,20 +123,22 @@ INFO is the org-exporter communication channel plist."
 
 Adds the xcolor package and transcodes the keyword OMNIX_COLOR definitions to
 xcolor's definecolor commands."
-  (let ((color-alist (plist-get info :omnix-colors))
-	(current-headers (plist-get info :latex-header))
-	(new-headers "\\usepackage{xcolor}"))
-    (dolist (color-pair color-alist)
-      (let ((name (car color-pair))
-	    (code (omnix-color--remove-prefix "#" (cdr color-pair))))
-	(setq new-headers
-	      (concat new-headers "\n"
-		      (format "\\definecolor{%s}{HTML}{%s}" name code)))))
+  (if (plist-get info :omnix-plain)
+      info ; Do not use package xcolor when running in plain mode.
+    (let ((color-alist (plist-get info :omnix-colors))
+	  (current-headers (plist-get info :latex-header))
+	  (new-headers "\\usepackage{xcolor}"))
+      (dolist (color-pair color-alist)
+	(let ((name (car color-pair))
+	      (code (omnix-color--remove-prefix "#" (cdr color-pair))))
+	  (setq new-headers
+		(concat new-headers "\n"
+			(format "\\definecolor{%s}{HTML}{%s}" name code)))))
 
-    (setq info (plist-put info :latex-header
-			  (if current-headers
-			      (concat current-headers "\n" new-headers)
-			    new-headers)))))
+      (setq info (plist-put info :latex-header
+			    (if current-headers
+				(concat current-headers "\n" new-headers)
+			      new-headers))))))
 
 (defun omnix-color--setup (info backend)
   "Register the colors found in the options of the INFO plist.

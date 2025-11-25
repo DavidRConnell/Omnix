@@ -57,6 +57,11 @@
 ;; color). In these cases it should still be preferred to define a default
 ;; behavior through a "plain" processor (such as emphasizing the text in lieu
 ;; of font color).
+;;
+;; To make it easy to generate a simple output file, this module installs a
+;; "omnix-plain" option. When set, the omnix processor selector will ignore
+;; preferences and return a plain processor. Other modules should consider
+;; changing behavior to avoid use of uncommon packages when omnix-plain is set.
 
 ;;; Code:
 
@@ -157,11 +162,13 @@ GLOBAL-PREFERENCES."
 The processor is selected from the alist of KNOWN-PROCESSORS.
 
 Where INFO is a communication channel containing the parsed OPTION."
-  (let ((buffer-preferences (omnix-processor--buffer-processor-preferences
-			     global-preferences option info)))
-    (omnix-processor--select backend
-			     buffer-preferences
-			     known-processors)))
+  (if (plist-get info :omnix-plain)
+      (omnix-processor--select backend '((t . plain)) known-processors)
+    (let ((buffer-preferences (omnix-processor--buffer-processor-preferences
+			       global-preferences option info)))
+      (omnix-processor--select backend
+			       buffer-preferences
+			       known-processors))))
 
 
 (defun omnix-processor--run-setup (processor info backend)
@@ -174,6 +181,10 @@ The setup function should return the INFO communication channel."
     (if setup
 	(funcall setup info backend)))
   info)
+
+;; When true, all modules should select the plain processor.
+(add-to-list 'org-export-options-alist
+	     '(:omnix-plain nil "omnix-plain" nil nil t))
 
 (provide 'omnix--processors)
 ;;; omnix--processors.el ends here
