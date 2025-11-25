@@ -64,8 +64,8 @@ clean:
 	rm -rf build
 	rm -f $(FIG_NAME).*
 
-.PHONY: clean-dist
-clean-dist: clean
+.PHONY: distclean
+distclean: clean
 	rm -f $(TEST_OUTPUTS)
 	rm -f $(REFERENCE_OUTPUTS)
 	rm -f $(TEST_FILES:.org=.pdf)

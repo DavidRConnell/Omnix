@@ -3,7 +3,7 @@
 ;; Copyright (C) 2025 David R. Connell
 
 ;; Author: David R. Connell <david32@dcon.addy.io>
-;; Version: 0.1.0
+;; Version: 0.1.0-alpha
 ;; URL: https://github.com/davidrconnell/omnix
 ;; Keywords: outlines, text
 ;; Package-Requires: ((org "9.4") (batch-ox "0.1"))
