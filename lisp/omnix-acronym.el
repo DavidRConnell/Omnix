@@ -302,42 +302,37 @@ KEY is the acronym's KEY."
 
   BACKEND is the backend." type)))
     (defalias func-name
-      (lambda (path description backend)
+      (lambda (path description backend info)
 	(:documentation docstring)
 
 	(if description
 	    (error "Acronym links do not accept descriptions"))
 
-	(let ((func
-	       (omnix-processor--get-function omnix-acronym--processor type)))
+	(let* ((processor (plist-get info :omnix-acronym-processor))
+	       (func (omnix-processor--get-function processor type)))
 	  (if (not func)
-	      (error "Function \"%s\" not defined for processor \"%\"" type
-		     (omnix-processor--name omnix-acronym--processor)))
+	      (error "Function \"%s\" not defined for processor \"%s\""
+		     type
+		     (omnix-processor--name processor)))
 	  (funcall func path backend))))
     func-name))
 
 (dolist (type '("acr" "acr/long" "acr/short" "acr/full"))
   (org-link-set-parameters type :export (omnix-acronym--create-link type)))
 
-;;; Expand acronym list and acronym macros.
-;; I think this is the hook needed to expand (org-export-filter-keyword-functions)
-
 ;;; Parse options and set up hooks
-(defun omnix-acronym--clean (_)
+(defun omnix-acronym--clean (&rest _)
   "Reset globals used for tracking acronym elements."
   (setq omnix-acronym--acronym-alist omnix-acronym-alist
 	omnix-acronym--acronym-seen-alist '()))
 
-(add-hook 'org-export-before-processing-hook #'omnix-acronym--clean)
+(add-hook 'org-export-before-processing-functions #'omnix-acronym--clean)
 
 ;;; Set options from header keywords.
 (add-to-list 'org-export-options-alist
 	     '(:omnix-acronyms "OMNIX_ACRONYM" nil nil newline))
 (add-to-list 'org-export-options-alist
 	     '(:omnix-acronym-processor "OMNIX_ACRONYM_PROCESSOR" nil nil split))
-
-(defvar omnix--acronym--processor nil
-  "Store the processor selected for this run.")
 
 (defun omnix-acronym--split-acronym-definition (definition)
   "Split the keyword acronym DEFINITION from key:short:long."
@@ -363,15 +358,17 @@ Uses the export BACKEND to select the processor from the processor preference
 alist.
 
 Returns the modified INFO."
-  (setq omnix-acronym--processor
-	(omnix-processor--select-buffer-processor
-	 backend
-	 omnix-acronym-processor-alist
-	 :omnix-acronym-processor
-	 info
-	 omnix-acronym--known-processors-alist))
+  (setq info (plist-put info :omnix-acronym-processor
+			(omnix-processor--select-buffer-processor
+			 backend
+			 omnix-acronym-processor-alist
+			 :omnix-acronym-processor
+			 info
+			 omnix-acronym--known-processors-alist)))
   (omnix-acronym--register-acronyms info)
-  (omnix-processor--run-setup omnix-acronym--processor info backend))
+  (omnix-processor--run-setup (plist-get info :omnix-acronym-processor)
+			      info
+			      backend))
 
 (add-to-list 'org-export-filter-options-functions
 	     #'omnix-acronym--initialize-acronym-processor)

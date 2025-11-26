@@ -27,7 +27,9 @@ all: build
 build: $(BYTE_FILES)
 
 %.elc: %.el
+	@echo Compiling: $(notdir $<)
 	$(CONVERT) --eval '(byte-compile-file "$<")'
+	@echo
 
 .PHONY: dist
 dist: $(PACKAGE_NAME).tar
