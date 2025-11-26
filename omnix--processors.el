@@ -1,9 +1,8 @@
-;;; omnix--processors --- Processor utilities -*- lexical-binding: t; -*-
+;;; omnix--processors.el --- Processor utilities -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025 David R. Connell
 ;;
 ;; Author: David R. Connell <david32@dcon.addy.io>
-;; Version: 0.1.0
 
 ;; This file is not part of GNU Emacs.
 

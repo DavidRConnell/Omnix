@@ -1,9 +1,8 @@
-;;; omnix-color --- Color text -*- lexical-binding: t; -*-
+;;; omnix-color.el --- Color text -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025 David R. Connell
 ;;
 ;; Author: David R. Connell <david32@dcon.addy.io>
-;; Version: 0.1.0
 
 ;; This file is not part of GNU Emacs.
 

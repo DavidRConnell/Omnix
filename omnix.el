@@ -1,4 +1,4 @@
-;;; omnix --- Omni exporter for Org files-*- lexical-binding: t -*-
+;;; omnix.el --- Omni exporter for Org files-*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025 David R. Connell
 

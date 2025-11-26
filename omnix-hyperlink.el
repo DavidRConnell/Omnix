@@ -1,9 +1,8 @@
-;;; omnix-hyperlink --- Filters for adding links -*- lexical-binding: t; -*-
+;;; omnix-hyperlink.el --- Filters for adding links -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025 David R. Connell
 ;;
 ;; Author: David R. Connell <david32@dcon.addy.io>
-;; Version: 0.1.0
 
 ;; This file is not part of GNU Emacs.
 
