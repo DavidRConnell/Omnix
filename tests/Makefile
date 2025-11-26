@@ -28,7 +28,7 @@ check: $(TEST_OUTPUTS)
 references: $(REFERENCE_OUTPUTS)
 
 define EXPORTER
-%.$(1): %.org $(SRC_FILES)
+%.$(1): %.org $(BYTE_FILES)
 	@echo Building: "$$@"
 	$$(CONVERT) --eval '(batch-ox-export "$$@" "$$<")'
 	@echo

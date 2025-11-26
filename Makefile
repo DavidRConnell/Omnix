@@ -1,6 +1,7 @@
 export TOP_DIR := $(PWD)
 export SRC_DIR := $(TOP_DIR)/lisp
-export SRC_FILES := $(wildcard $(SRC_DIR)/*.el)
+SRC_FILES := $(wildcard $(SRC_DIR)/*.el)
+export BYTE_FILES := $(filter-out $(SRC_DIR)/omnix-pkg.elc,$(SRC_FILES:.el=.elc))
 export LATEX ?= lualatex
 
 export TEST_FILES
@@ -20,7 +21,13 @@ endif
 PACKAGE_NAME := omnix-$(VERSION)
 
 .PHONY: all
-all: dist
+all: build
+
+.PHONY: build
+build: $(BYTE_FILES)
+
+%.elc: %.el
+	$(CONVERT) --eval '(byte-compile-file "$<")'
 
 .PHONY: dist
 dist: $(PACKAGE_NAME).tar
@@ -31,15 +38,15 @@ $(PACKAGE_NAME).tar: $(SRC_FILES)
 	tar --transform='s,^,$(PACKAGE_NAME)/,' -c -f "$@" -C $(SRC_DIR) $(notdir $(SRC_FILES))
 
 .PHONY: check
-check:
+check: build
 	$(MAKE) -C tests check
 
 .PHONY: references
-references:
+references: build
 	$(MAKE) -C tests references
 
 .PHONY: check-pdfs
-check-pdfs:
+check-pdfs: build
 	$(MAKE) -C tests pdfs
 
 .PHONY: clean
@@ -50,3 +57,4 @@ clean:
 .PHONY: distclean
 distclean: clean
 	$(MAKE) -C tests distclean
+	rm -f $(BYTE_FILES)
