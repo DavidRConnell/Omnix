@@ -1,6 +1,7 @@
 #+TITLE: Test glossaries with linking.
 #+AUTHOR: Omnix
 #+LATEX_COMPILER: lualatex
+#+LATEX_HEADER: \hypersetup{colorlinks=true}
 #+OMNIX_ACRONYM: tbd:TBD:To Be Determined
 #+OMNIX_ACRONYM: idk:IDK:I don't know
 #+OMNIX_ACRONYM: lol:LOL:Laugh Out Loud
