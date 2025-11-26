@@ -6,7 +6,7 @@ ifeq ($(strip $(TEST_FILES)),)
 	TEST_FILES := $(wildcard test_*.org)
 endif
 
-ifeq ($(strip $(TEST_FILES)),)
+ifeq ($(strip $(TEST_EXTS)),)
 	TEST_EXTS := html tex txt md docx
 endif
 

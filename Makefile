@@ -1,13 +1,15 @@
 export TOP_DIR := $(PWD)
-export SRC_FILES := $(wildcard $(TOP_DIR)/*.el)
+export SRC_DIR := $(TOP_DIR)/lisp
+export SRC_FILES := $(wildcard $(SRC_DIR)/*.el)
+export LATEX ?= lualatex
+
 export TEST_FILES
 export REFERENCE_FILES
 export TEST_EXTS
-export LATEX ?= lualatex
 
 EMACS ?= emacs
 INIT_EL ?= "(progn (require 'omnix) (require 'batch-ox) (omnix-global))"
-LOAD_PATH ?= -L $(TOP_DIR) -L $(TOP_DIR)/vendor/batch-ox
+LOAD_PATH ?= -L $(SRC_DIR) -L $(TOP_DIR)/vendor/batch-ox
 export CONVERT := $(EMACS) -Q --batch $(LOAD_PATH) --eval $(INIT_EL)
 
 VERSION ?= $(shell git describe --tags 2>/dev/null | cut -c2-)
@@ -24,10 +26,9 @@ all: dist
 dist: $(PACKAGE_NAME).tar
 
 $(PACKAGE_NAME).tar: $(SRC_FILES)
-	sed -i 's/\(Version:\).*/\1 $(VERSION)/g' omnix.el
-	sed -i 's/[0-9]\.[0-9]\.[0-9][^"]*/$(VERSION)/g' omnix-pkg.el
-	@echo $(TOP_DIR)
-	tar --transform='s,^,$(PACKAGE_NAME)/,' -c -f "$@" $(notdir $(SRC_FILES))
+	sed -i 's/\(Version:\).*/\1 $(VERSION)/g' $(SRC_DIR)/omnix.el
+	sed -i 's/[0-9]\.[0-9]\.[0-9][^"]*/$(VERSION)/g' $(SRC_DIR)/omnix-pkg.el
+	tar --transform='s,^,$(PACKAGE_NAME)/,' -c -f "$@" -C $(SRC_DIR) $(notdir $(SRC_FILES))
 
 .PHONY: check
 check:
