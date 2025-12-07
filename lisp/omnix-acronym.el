@@ -71,10 +71,13 @@
 
 ;;; Code:
 
+(require 'org)
 (require 'ox)
+
 (require 'omnix-hyperlink)
 (require 'omnix--utils)
 (require 'omnix--processors)
+(require 'omnix--search)
 
 ;;; Public vars.
 (defvar omnix-acronym-alist '()
@@ -317,8 +320,27 @@ KEY is the acronym's KEY."
 	  (funcall func path backend))))
     func-name))
 
+(defun omnix-acronym--follow-link (acronym)
+  "Acronym link types' follow function for finding the ACRONYM definition."
+  (omnix-search--goto-keyword-project "OMNIX_ACRONYM" (concat acronym ":")))
+
+(defun omnix-acronym--create-link-completing-read (type)
+  "Create completion functions for TYPE link."
+  (let ((func-name (intern (format "omnix-acronym-%s-completing-read" type)))
+	(docstring (format "Completing read for a %s link." type)))
+    (defalias func-name
+      (lambda (&optional _)
+	(let* ((candidate-alist (omnix-search--collect-keyword-project
+				 "OMNIX_ACRONYM" "\\([^:]*\\):\\(.*\\)"))
+	       (selection (completing-read "Acronym: " candidate-alist)))
+	  (format "%s:%s" type selection))))))
+
 (dolist (type '("acr" "acr/long" "acr/short" "acr/full"))
-  (org-link-set-parameters type :export (omnix-acronym--create-link type)))
+  (org-link-set-parameters type
+			   :export (omnix-acronym--create-link type)
+			   :follow #'omnix-acronym--follow-link
+			   :complete
+			   (omnix-acronym--create-link-completing-read type)))
 
 ;;; Parse options and set up hooks
 (defun omnix-acronym--clean (&rest _)
@@ -372,6 +394,27 @@ Returns the modified INFO."
 
 (add-to-list 'org-export-filter-options-functions
 	     #'omnix-acronym--initialize-acronym-processor)
+
+;;; CAPF
+(defun omnix-acronym-capf ()
+  "Completion at point function for acronym links."
+  (when (omnix-search--looking-at-link-p "acr\\(?:/[^:]*\\)?")
+    (let* ((start (match-beginning 1))
+	   (end (point))
+	   (candidates-alist (omnix-search--collect-keyword-project
+			      "OMNIX_ACRONYM" "\\([^:]*\\):\\(.*\\)")))
+      (list start end
+	    (mapcar #'car candidates-alist)
+	    :exclusive 'no
+	    :annotation-function
+	    (lambda (key)
+	      (let ((desc (alist-get key candidates-alist nil nil #'string=)))
+		(if desc
+		    (format " -- %s " desc) "")))))))
+
+(defun omnix-acronym-setup-capf ()
+  "Add the acronym CAPF to completion functions."
+  (add-hook 'completion-at-point-functions #'omnix-acronym-capf nil t))
 
 (provide 'omnix-acronym)
 ;;; omnix-acronym.el ends here

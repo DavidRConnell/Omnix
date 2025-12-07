@@ -32,6 +32,15 @@ Instead, these modules can be loaded manually, or ~omnix~ makes a ~omnix-global~
   (omnix-global)
 #+end_src
 
+** CAPFs
+Omnix provides completion at point functions (CAPFs) for some link types.
+These can be turned on by adding the relevant setup functions to `org-mode-hook`.
+
+#+begin_src elisp
+  (add-hook 'org-mode-hook #'omnix-acronym-setup-capf)
+  (add-hook 'org-mode-hook #'omnix-color-setup-capf)
+#+end_src
+
 * Design principles
 Inspired by ~org-cite~'s use of a citation processor, ~Omnix~ relies on processors to perform the specific transformation whenever there are multiple ways to handle a function.
 This allows users to set an alist associating backends with preferred processors.
@@ -59,7 +68,6 @@ When this is set to true in a buffer, only plain processors will be used and som
 #+end_src
 
 See the test Org files to get a quick view of common usage.
-
 * Acronyms
 The ~omnix-acronym~ module provides features similar to the ~glossaries~ LaTeX package.
 This provides four new link types for managing acronyms: ~acr~, ~acr/short~, ~acr/long~, and ~acr/full~.

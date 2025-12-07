@@ -76,6 +76,11 @@
 (require 'omnix-acronym)
 (require 'omnix-sansext)
 
+(defgroup omnix nil
+  "Omni backend org-export links and macros."
+  :tag "Omnix"
+  :group 'org)
+
 (defun omnix-global ()
   "Load all omnix modules.
 

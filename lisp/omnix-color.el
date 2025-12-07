@@ -36,6 +36,11 @@
 
 ;;; Code:
 
+(require 'org)
+(require 'ox)
+
+(require 'omnix--utils)
+
 (defvar omnix-color-fallback "**%s**"
   "The format string use when a backend does not support color.
 
@@ -99,7 +104,27 @@ INFO is the org-exporter communication channel plist."
 	 (color-code (alist-get (intern path) color-alist path)))
     (funcall transcoder path color-code description)))
 
-(org-link-set-parameters "color" :export #'omnix-color--exporter)
+(defun omnix-color--follow-link (color)
+  "Color link type's follow function for finding the COLOR definition."
+  (omnix-search--goto-keyword-project "OMNIX_COLOR" (concat color ":")))
+
+(defun omnix-color--link-face (color)
+  "Set the color link's foreground to COLOR."
+  (let* ((color-alist
+	  ;; TODO: Replace with a caching mechanism.
+	  (omnix-search--collect-keyword-project
+	   "OMNIX_COLOR" "\\([^:]*\\):\\(.*\\)"))
+	 (hex-code (alist-get color color-alist nil nil #'string=)))
+
+    (message "%s" color-alist)
+    (if (and hex-code (color-supported-p hex-code))
+	`(:inherit org-link :foreground ,hex-code)
+      'org-link)))
+
+(org-link-set-parameters "color"
+			 :export #'omnix-color--exporter
+			 :follow #'omnix-color--follow-link
+			 :face #'omnix-color--link-face)
 
 ;; Handle options
 (add-to-list 'org-export-options-alist
@@ -150,6 +175,30 @@ And maybe set up the LaTeX preamble if using a LaTeX based BACKEND."
 
 (add-to-list 'org-export-filter-options-functions
 	     #'omnix-color--setup)
+
+;;; CAPF
+(defun omnix-color-capf ()
+  "Completion at point function for color links."
+  (when (omnix-search--looking-at-link-p "color\\(?:/[^:]*\\)?")
+    (let* ((start (match-beginning 1))
+	   (end (point))
+	   (candidates-alist (omnix-search--collect-keyword-project
+			      "OMNIX_COLOR" "\\([^:]*\\):\\(.*\\)")))
+      (list start end
+	    (mapcar #'car candidates-alist)
+	    :exclusive 'no
+	    :annotation-function
+	    (lambda (key)
+	      (let ((hex-code (substring-no-properties
+			       (alist-get key candidates-alist nil nil #'string=))))
+		(if (and hex-code (color-supported-p hex-code))
+		    (format " -- %s "
+			    (propertize hex-code 'face
+					`(:foreground ,hex-code))) "")))))))
+
+(defun omnix-color-setup-capf ()
+  "Add the color CAPF to completion functions."
+  (add-hook 'completion-at-point-functions #'omnix-color-capf nil t))
 
 (provide 'omnix-color)
 ;;; omnix-color.el ends here
