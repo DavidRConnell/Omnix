@@ -30,7 +30,7 @@ references: $(REFERENCE_OUTPUTS)
 define EXPORTER
 %.$(1): %.org $(BYTE_FILES)
 	@echo Building: "$$@"
-	$$(CONVERT) --eval '(batch-ox-export "$$@" "$$<")'
+	$$(EMACS_CMD) --eval '(batch-ox-export "$$@" "$$<")'
 	@echo
 endef
 
@@ -38,8 +38,8 @@ endef
 	@echo Building: "$@"
 	pandoc -i "$<" -o "$@"
 
-%.tex: CONVERT += -l init-pdf-ox.el
-%.md: CONVERT += --eval "(require 'ox-md)"
+%.tex: EMACS_CMD += -l init-pdf-ox.el
+%.md: EMACS_CMD += --eval "(require 'ox-md)"
 $(foreach ext,$(filter-out docx,$(TEST_EXTS) md),$(eval $(call EXPORTER,$(ext))))
 
 FIG_NAME := images/lines
