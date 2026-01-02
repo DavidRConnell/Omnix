@@ -79,6 +79,7 @@
 (defgroup omnix nil
   "Omni backend org-export links and macros."
   :tag "Omnix"
+  :prefix "omnix"
   :group 'org)
 
 (defun omnix-global ()
