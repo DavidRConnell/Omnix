@@ -146,7 +146,7 @@ GLOBAL-PREFERENCES."
   (let ((buffer-preferences global-preferences)
 	(buffer-processors (plist-get info option)))
     (dolist (proc buffer-processors)
-      (let ((parts (string-split proc ":")))
+      (let ((parts (split-string proc ":")))
 	(if (eq (length parts) 1)
 	    (push `(t . ,(intern (car parts))) buffer-preferences)
 	  (push `(,(intern (car parts)) . ,(intern (cadr parts)))

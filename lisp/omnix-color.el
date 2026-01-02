@@ -88,7 +88,7 @@ same as the color name.")
 
 If STRING does not start with PREFIX, it is returned unmodified."
   (if (string-prefix-p prefix string)
-      (cadr (string-split string prefix))
+      (cadr (split-string string prefix))
     string))
 
 (defun omnix-color--exporter (path description backend info)
@@ -135,7 +135,7 @@ INFO is the org-exporter communication channel plist."
   (let* ((color-defs (plist-get info :omnix-colors))
 	 (color-alist omnix-color-alist))
     (dolist (def color-defs)
-      (let ((parts (string-split def ":")))
+      (let ((parts (split-string def ":")))
 	(if (not (eq (length parts) 2))
 	    (message "Malformed color definition \"%s\"; skipping." def)
 	  (push `(,(intern (car parts)) . ,(cadr parts)) color-alist))))

@@ -5,8 +5,8 @@
 ;; Author: David R. Connell <david32@dcon.addy.io>
 ;; Version: 0.1.0-alpha
 ;; URL: https://github.com/davidrconnell/omnix
-;; Keywords: outlines, text
-;; Package-Requires: ((org "9.4") (batch-ox "0.1"))
+;; Keywords: outlines text
+;; Package-Requires: ((emacs "28.1"))
 
 ;; This file is not part of GNU Emacs.
 

@@ -273,7 +273,7 @@ KEY is the acronym's KEY."
 	(new-headers))
     (when (and acronym-definitions (not (string-empty-p acronym-definitions)))
       (setq new-headers "\\usepackage{glossaries}")
-      (dolist (acr (string-split acronym-definitions "\n" t))
+      (dolist (acr (split-string acronym-definitions "\n" t))
 	(let ((parts (omnix-acronym--split-acronym-definition acr)))
 	  (setq new-headers
 		(concat new-headers "\n"
@@ -358,7 +358,7 @@ KEY is the acronym's KEY."
 
 (defun omnix-acronym--split-acronym-definition (definition)
   "Split the keyword acronym DEFINITION from key:short:long."
-  (let ((parts (string-split definition ":")))
+  (let ((parts (split-string definition ":")))
     (if (< (length parts) 3)
 	(message "Skipping malformed acronym: %s" definition)
       (pcase-let ((`(,key ,short . ,rest) parts))
@@ -367,7 +367,7 @@ KEY is the acronym's KEY."
 (defun omnix-acronym--register-acronyms (info)
   "Extract acronyms from INFO plist defined using OMNIX_ACRONYM keywords."
   (let* ((acronyms-raw (plist-get info :omnix-acronyms))
-	 (acronyms (if acronyms-raw (string-split acronyms-raw "\n" t))))
+	 (acronyms (if acronyms-raw (split-string acronyms-raw "\n" t))))
     (dolist (def acronyms)
       (apply #'omnix-acronym--register-acronym
 	     (omnix-acronym--split-acronym-definition def))))
