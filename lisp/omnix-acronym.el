@@ -330,6 +330,7 @@ KEY is the acronym's KEY."
 	(docstring (format "Completing read for a %s link." type)))
     (defalias func-name
       (lambda (&optional _)
+	(:documentation docstring)
 	(let* ((candidate-alist (omnix-search--collect-keyword-project
 				 "OMNIX_ACRONYM" "\\([^:]*\\):\\(.*\\)"))
 	       (selection (completing-read "Acronym: " candidate-alist)))
