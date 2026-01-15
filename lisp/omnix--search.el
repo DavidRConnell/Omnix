@@ -81,11 +81,6 @@ See also `omnix-search-keyword-re'.")
   "Regular expression for matching included Org files.")
 
 ;; Paper management
-(defvar omnix-search--current-file nil
-  "The latest file visited.
-
-Used to determine if we have switched buffers since last scan.")
-
 (defvar omnix-search--current-paper nil
   "The parent Org file for the current paper.")
 
@@ -117,13 +112,6 @@ Uses the same keys as `omnix-search--re-caches'.")
 (defun omnix-search--last-cache-updates (pattern)
   "Provide list of last scan times for PATTERN's cache."
   (alist-get pattern omnix-search--last-cache-updates '() nil #'string=))
-
-(defun omnix-search--changed-file-p ()
-  "Determine if we changed files since last scan."
-  (let ((buffer-file (buffer-file-name)))
-    (unless (string= buffer-file omnix-search--current-file)
-      (setq omnix-search--current-file buffer-file)
-      (omnix-search--maybe-switch-paper))))
 
 (defun omnix-search--maybe-switch-paper ()
   "Switch the current paper to PAPER.
