@@ -362,6 +362,7 @@ Use external PROGRAM to search files."
 	   (cmd (format cmd-template
 			(string-replace "\\)" ")" (string-replace "\\(" "(" pattern))
 			(string-join files " ")))
+	   (parent (file-name-directory (buffer-file-name)))
 	   (results (mapcar (lambda (f) (cons f nil)) files)))
 
       (with-temp-buffer
@@ -371,8 +372,10 @@ Use external PROGRAM to search files."
 	(while (not (eobp))
 	  (let ((line-end (line-end-position)))
 	    (when (search-forward ":" line-end t)
-	      (let ((filename (buffer-substring-no-properties
-			       (line-beginning-position) (- (point) 1))))
+	      (let ((filename (omnix-search--absolute-path
+			       (buffer-substring-no-properties
+				(line-beginning-position) (- (point) 1))
+			       parent)))
 		;; Ensure patterns that expect match to start at BOL work.
 		(delete-char (- (line-beginning-position) (point)))
 		(when (re-search-forward pattern line-end t)
