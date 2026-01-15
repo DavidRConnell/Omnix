@@ -355,7 +355,7 @@ the cdr is the list of matches."
   "External variant of searching PATTERN across all FILES.
 
 Use external PROGRAM to search files."
-  (unless files
+  (when files
     (let* ((cmd-template (pcase program
 			   ('ripgrep "rg --no-line-number --color=never '%s' %s")
 			   ('grep "grep --color=never -E '%s' %s")))
