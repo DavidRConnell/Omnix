@@ -455,13 +455,14 @@ If NAME is found, jump to that point. If point is in another file,
 	(setq foundp t
 	      file (car file-matches))))
 
-    (unless (string= file (buffer-file-name))
-      (find-file file))
+    (when foundp
+      (unless (string= file (buffer-file-name))
+	(find-file file))
 
-    (goto-char 0)
-    (while (and (search-forward-regexp pattern)
-		(not (string= (match-string 1) name))))
-    (goto-char (match-beginning 1))))
+      (goto-char (point-min))
+      (while (and (search-forward-regexp pattern)
+		  (not (string= (match-string 1) name))))
+      (goto-char (match-beginning 1)))))
 
 (defun omnix-search--looking-at-link-p (type)
   "Test if point is currently in an omnix link of TYPE.
