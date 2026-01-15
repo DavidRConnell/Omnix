@@ -40,6 +40,7 @@
 (require 'ox)
 
 (require 'omnix--utils)
+(require 'omnix--search)
 
 (defvar omnix-color-fallback "**%s**"
   "The format string use when a backend does not support color.
@@ -66,6 +67,10 @@ the description and return a string.
 Color code is a HTML code if the color has been defined in the
 `omnix-color-alist' or with OMNIX_COLOR keyword options, otherwise it is the
 same as the color name.")
+
+(defvar omnix-color-re (omnix-search-keyword-re "OMNIX_COLOR"
+						"\\([^:]*\\):\\(.*\\)")
+  "Regex for finding color definitions.")
 
 (defun omnix-color--transcoder-latex (name _ description)
   "Transcode the color NAME and DESCRIPTION pair to a LaTeX textcolor command."
@@ -106,17 +111,14 @@ INFO is the org-exporter communication channel plist."
 
 (defun omnix-color--follow-link (color)
   "Color link type's follow function for finding the COLOR definition."
-  (omnix-search--goto-keyword-project "OMNIX_COLOR" (concat color ":")))
+  (omnix-search--goto-project color omnix-color-re))
 
 (defun omnix-color--link-face (color)
   "Set the color link's foreground to COLOR."
   (let* ((color-alist
-	  ;; TODO: Replace with a caching mechanism.
-	  (omnix-search--collect-keyword-project
-	   "OMNIX_COLOR" "\\([^:]*\\):\\(.*\\)"))
+	  (omnix-search--collect-project omnix-color-re))
 	 (hex-code (alist-get color color-alist nil nil #'string=)))
 
-    (message "%s" color-alist)
     (if (and hex-code (color-supported-p hex-code))
 	`(:inherit org-link :foreground ,hex-code)
       'org-link)))
@@ -182,8 +184,7 @@ And maybe set up the LaTeX preamble if using a LaTeX based BACKEND."
   (when (omnix-search--looking-at-link-p "color\\(?:/[^:]*\\)?")
     (let* ((start (match-beginning 1))
 	   (end (point))
-	   (candidates-alist (omnix-search--collect-keyword-project
-			      "OMNIX_COLOR" "\\([^:]*\\):\\(.*\\)")))
+	   (candidates-alist (omnix-search-get-candidates omnix-color-re)))
       (list start end
 	    (mapcar #'car candidates-alist)
 	    :exclusive 'no

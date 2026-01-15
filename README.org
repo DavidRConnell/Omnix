@@ -42,6 +42,17 @@ These can be turned on by adding the relevant setup functions to `org-mode-hook`
 #+end_src
 
 * Design principles
+** Papers
+~Omnix~ defines papers based on ~#+INCLUDE:~ macros.
+For a single file paper, the paper is defined as only the one Org file, but for multiple files, ~Omnix~ will search for a paper root than scan each file included by the paper recursively until it builds a list of all Org files downstream of the root file.
+This allows ~Omnix~ to provide completion for values defined elsewhere in the paper.
+~Omnix~ can handle a project with a single paper spread across multiple Org files or a project that contains many single file papers (or even a project with multiple multi-file papers).
+The provided ~capf~ functions attempt to be smart about when to search files but if a cache ever gets out of date the ~omnix-search-clear-caches~ function can be called to force rebuilding the cache (if caches consistently go stale, please open an issue).
+
+In the case where a single Org file is included by multiple Org files, this will be considered the root file.
+While this isn't a true root file, the idea is if a file has been included by multiple files above it, it is not safe to use values defined in a file above it.
+
+** Processors
 Inspired by ~org-cite~'s use of a citation processor, ~Omnix~ relies on processors to perform the specific transformation whenever there are multiple ways to handle a function.
 This allows users to set an alist associating backends with preferred processors.
 Generally, when processors are used, there will be a ~plain~ processor which performs pure text transformations.

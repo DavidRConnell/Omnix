@@ -110,6 +110,11 @@ For this behavior set the variable to: `'((latex . gls) (t . plain))'")
 (defvar omnix-acronym--acronym-seen-alist '()
   "List storing acronyms that have been expanded (defined) already.")
 
+(defvar omnix-acronym-re (omnix-search-keyword-re "OMNIX_ACRONYM"
+						  (rx (group (* (not ":")))
+						      ":"
+						      (group (regex ".*")))))
+
 (defun omnix-acronym--acronym-seen-p (key &optional dry-run)
   "Determine if the KEY has been expanded yet.
 
@@ -322,7 +327,7 @@ KEY is the acronym's KEY."
 
 (defun omnix-acronym--follow-link (acronym)
   "Acronym link types' follow function for finding the ACRONYM definition."
-  (omnix-search--goto-keyword-project "OMNIX_ACRONYM" (concat acronym ":")))
+  (omnix-search--goto-project acronym omnix-acronym-re))
 
 (defun omnix-acronym--create-link-completing-read (type)
   "Create completion functions for TYPE link."
@@ -331,8 +336,7 @@ KEY is the acronym's KEY."
     (defalias func-name
       (lambda (&optional _)
 	(:documentation docstring)
-	(let* ((candidate-alist (omnix-search--collect-keyword-project
-				 "OMNIX_ACRONYM" "\\([^:]*\\):\\(.*\\)"))
+	(let* ((candidate-alist (omnix-search-get-candidates omnix-acronym-re))
 	       (selection (completing-read "Acronym: " candidate-alist)))
 	  (format "%s:%s" type selection))))))
 
@@ -402,8 +406,7 @@ Returns the modified INFO."
   (when (omnix-search--looking-at-link-p "acr\\(?:/[^:]*\\)?")
     (let* ((start (match-beginning 1))
 	   (end (point))
-	   (candidates-alist (omnix-search--collect-keyword-project
-			      "OMNIX_ACRONYM" "\\([^:]*\\):\\(.*\\)")))
+	   (candidates-alist (omnix-search-get-candidates omnix-acronym-re)))
       (list start end
 	    (mapcar #'car candidates-alist)
 	    :exclusive 'no
