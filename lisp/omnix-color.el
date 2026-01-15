@@ -193,9 +193,10 @@ And maybe set up the LaTeX preamble if using a LaTeX based BACKEND."
 	      (let ((hex-code (substring-no-properties
 			       (alist-get key candidates-alist nil nil #'string=))))
 		(if (and hex-code (color-supported-p hex-code))
-		    (format " -- %s "
+		    (format "  %s"
 			    (propertize hex-code 'face
-					`(:foreground ,hex-code))) "")))))))
+					`(:foreground ,hex-code)))
+		  "")))))))
 
 (defun omnix-color-setup-capf ()
   "Add the color CAPF to completion functions."

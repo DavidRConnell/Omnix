@@ -299,18 +299,16 @@ Uses cache for PATTERN."
 	(last-updates (omnix-search--last-cache-updates pattern)))
     (remq nil
 	  (mapcar (lambda (file)
-		    (if (string= file (buffer-file-name))
-			file
-		      (let ((mtime (time-convert
-				    (file-attribute-modification-time
-				     (file-attributes file))
-				    'integer))
-			    (last-update (alist-get file
-						    last-updates
-						    0 nil #'string=)))
-			(if (> mtime last-update)
-			    file
-			  nil))))
+		    (let ((mtime (time-convert
+				  (file-attribute-modification-time
+				   (file-attributes file))
+				  'integer))
+			  (last-update (alist-get file
+						  last-updates
+						  0 nil #'string=)))
+		      (if (> mtime last-update)
+			  file
+			nil)))
 		  (omnix-search--paper-files)))))
 
 (defun omnix-search--maybe-update-paper-files ()
@@ -359,7 +357,7 @@ Lists in different order will be considered different."
 (defun omnix-search--collect-files (pattern files)
   "Search for PATTERN across FILES.
 
-Returns a list of con cells where the car if each element is the file name and
+Returns a list of con cells where the car of each element is the file name and
 the cdr is the list of matches."
   (if (member omnix-search-program '(ripgrep grep))
       (omnix-search--collect-files-external omnix-search-program pattern files)
@@ -369,38 +367,40 @@ the cdr is the list of matches."
   "External variant of searching PATTERN across all FILES.
 
 Use external PROGRAM to search files."
-  (let* ((cmd-template (pcase program
-			 ('ripgrep "rg --no-line-number --color=never '%s' %s")
-			 ('grep "grep --color=never -E '%s' %s")))
-	 (cmd (format cmd-template
-		      (string-replace "\\)" ")" (string-replace "\\(" "(" pattern))
-		      (string-join files " ")))
-	 (results '()))
-    (with-temp-buffer
-      (call-process-shell-command cmd nil t)
-      (goto-char (point-min))
+  (unless files
+    (let* ((cmd-template (pcase program
+			   ('ripgrep "rg --no-line-number --color=never '%s' %s")
+			   ('grep "grep --color=never -E '%s' %s")))
+	   (cmd (format cmd-template
+			(string-replace "\\)" ")" (string-replace "\\(" "(" pattern))
+			(string-join files " ")))
+	   (results (mapcar (lambda (f) (cons f nil)) files)))
 
-      (while (not (eobp))
-	(let ((line-end (line-end-position)))
-	  (when (search-forward ":" line-end t)
-	    (let ((filename (buffer-substring-no-properties
-			     (line-beginning-position) (- (point) 1))))
-	      ;; Ensure patterns that expect match to start at BOL work.
-	      (delete-char (- (line-beginning-position) (point)))
-	      (when (re-search-forward pattern line-end t)
-		(push (if (match-string 2)
-			  (cons (match-string-no-properties 1)
-				(match-string-no-properties 2))
-			(match-string-no-properties 1))
-		      (alist-get filename results nil nil #'string=))))))
-	(forward-line 1)))
+      (with-temp-buffer
+	(call-process-shell-command cmd nil t)
+	(goto-char (point-min))
 
-    (if (match-string 2)
-	(dolist (file results)
-	  (setf (alist-get (car file) results nil nil #'string=)
-		(omnix-search--pad-whitespace
-		 (alist-get (car file) results nil nil #'string=)))))
-    results))
+	(while (not (eobp))
+	  (let ((line-end (line-end-position)))
+	    (when (search-forward ":" line-end t)
+	      (let ((filename (buffer-substring-no-properties
+			       (line-beginning-position) (- (point) 1))))
+		;; Ensure patterns that expect match to start at BOL work.
+		(delete-char (- (line-beginning-position) (point)))
+		(when (re-search-forward pattern line-end t)
+		  (push (if (match-string 2)
+			    (cons (match-string-no-properties 1)
+				  (match-string-no-properties 2))
+			  (match-string-no-properties 1))
+			(alist-get filename results nil nil #'string=))))))
+	  (forward-line 1)))
+
+      (if (match-string 2)
+	  (dolist (file results)
+	    (setf (alist-get (car file) results nil nil #'string=)
+		  (omnix-search--pad-whitespace
+		   (alist-get (car file) results nil nil #'string=)))))
+      results)))
 
 (defun omnix-search--collect-files-elisp (pattern files)
   "Emacs-lisp variant of searching PATTERN across all FILES."

@@ -414,7 +414,7 @@ Returns the modified INFO."
 	    (lambda (key)
 	      (let ((desc (alist-get key candidates-alist nil nil #'string=)))
 		(if desc
-		    (format " -- %s " desc) "")))))))
+		    (format "  %s" desc) "")))))))
 
 (defun omnix-acronym-setup-capf ()
   "Add the acronym CAPF to completion functions."
