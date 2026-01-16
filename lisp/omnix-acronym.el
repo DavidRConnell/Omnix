@@ -327,7 +327,7 @@ KEY is the acronym's KEY."
 
 (defun omnix-acronym--follow-link (acronym)
   "Acronym link types' follow function for finding the ACRONYM definition."
-  (omnix-search--goto-project acronym omnix-acronym-re))
+  (omnix-search--goto-paper acronym omnix-acronym-re))
 
 (defun omnix-acronym--create-link-completing-read (type)
   "Create completion functions for TYPE link."

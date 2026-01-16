@@ -438,8 +438,8 @@ aligned."
       (setcdr pair (string-pad (cdr pair) max-len))))
   collection)
 
-(defun omnix-search--goto-project (name pattern)
-  "Find and goto first instance of NAME in Org project.
+(defun omnix-search--goto-paper (name pattern)
+  "Find and goto first instance of NAME in Org paper.
 
 Searches project for PATTERN. To make use of caches, PATTERN must be the same
 used to search the project in previous searches.

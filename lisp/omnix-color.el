@@ -111,7 +111,7 @@ INFO is the org-exporter communication channel plist."
 
 (defun omnix-color--follow-link (color)
   "Color link type's follow function for finding the COLOR definition."
-  (omnix-search--goto-project color omnix-color-re))
+  (omnix-search--goto-paper color omnix-color-re))
 
 (defun omnix-color--link-face (color)
   "Set the color link's foreground to COLOR."
