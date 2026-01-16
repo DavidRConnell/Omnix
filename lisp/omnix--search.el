@@ -370,20 +370,23 @@ Use external PROGRAM to search files."
 	(goto-char (point-min))
 
 	(while (not (eobp))
-	  (let ((line-end (line-end-position)))
-	    (when (search-forward ":" line-end t)
-	      (let ((filename (omnix-search--absolute-path
-			       (buffer-substring-no-properties
-				(line-beginning-position) (- (point) 1))
-			       parent)))
-		;; Ensure patterns that expect match to start at BOL work.
-		(delete-char (- (line-beginning-position) (point)))
-		(when (re-search-forward pattern line-end t)
-		  (push (if (match-string 2)
-			    (cons (match-string-no-properties 1)
-				  (match-string-no-properties 2))
-			  (match-string-no-properties 1))
-			(alist-get filename results nil nil #'string=))))))
+	  (let ((line-end (line-end-position))
+		(filename (if (> (length files) 1)
+			      (progn
+				(search-forward ":" line-end t)
+				(omnix-search--absolute-path
+				 (buffer-substring-no-properties
+				  (line-beginning-position) (- (point) 1))
+				 parent))
+			    (car files))))
+	    ;; Ensure patterns that expect match to start at BOL work.
+	    (delete-char (- (line-beginning-position) (point)))
+	    (when (re-search-forward pattern line-end t)
+	      (push (if (match-string 2)
+			(cons (match-string-no-properties 1)
+			      (match-string-no-properties 2))
+		      (match-string-no-properties 1))
+		    (alist-get filename results nil nil #'string=))))
 	  (forward-line 1)))
 
       (if (match-string 2)
