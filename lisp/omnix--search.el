@@ -244,25 +244,25 @@ Returns the list of pattern matches (same as the contents of the cache)"
   (omnix-search--maybe-update-paper-files)
 
   ;; In case the buffer has been modified but not saved.
-  (setf (alist-get (buffer-file-name)
-		   (alist-get pattern
-			      omnix-search--re-caches
-			      nil nil #'string=)
-		   nil nil #'string=)
-	(omnix-search--collect-buffer pattern)
+  (when (eq major-mode 'org-mode)
+    (setf (alist-get (buffer-file-name)
+		     (alist-get pattern
+				omnix-search--re-caches
+				nil nil #'string=)
+		     nil nil #'string=)
+	  (omnix-search--collect-buffer pattern)
 
-	(alist-get (buffer-file-name)
-		   (alist-get pattern
-			      omnix-search--last-cache-updates
-			      nil nil #'string=)
-		   nil nil #'string=)
-	(time-convert (current-time) 'integer))
+	  (alist-get (buffer-file-name)
+		     (alist-get pattern
+				omnix-search--last-cache-updates
+				nil nil #'string=)
+		     nil nil #'string=)
+	  (time-convert (current-time) 'integer)))
 
   (let ((modified-files (omnix-search--modified-files pattern))
 	(cache (omnix-search--get-cache pattern))
 	(scan-times (omnix-search--last-cache-updates pattern))
 	(now (time-convert (current-time) 'integer)))
-
     (dolist (m (omnix-search--collect-files pattern modified-files))
       (setf (alist-get (car m)
 		       (alist-get pattern
