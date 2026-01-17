@@ -126,7 +126,26 @@ Colors can be defined in the header with keyword ~#+OMNIX_COLOR: blue:#0071BC~ o
 Currently only HTML color codes are supported.
 
 If a color that has not be defined is used, that color will be passed as is to the backend.
-For example, assuming blue is defined as above, ~[[color:blue][Some colorful text]]~ will be passed to HTML as ~<a style="color:#0071BC;">Some colorful text</a>~ whereas if "red" has not been defined the previous example would be transcoded to ~<a style="color:red;">An important message</a>~ allowing the use of predefined colors (but note the potential of backends not have the same list of predefined colors).
+For example, assuming blue is defined as above, ~[[color:blue][Some colorful text]]~ will be passed to HTML as ~<a style="color:#0071BC;">Some colorful text</a>~ whereas if "red" has not been defined the previous example would be transcoded to ~<a style="color:red;">An important message</a>~ allowing the use of predefined colors (but note the potential for backends to not have the same list of predefined colors).
+
+Colors can also be mixed using syntax taken from LaTeX's ~xcolor~ package, ~name:color1!percent!color2~ or ~name:color1,nparts1;color2,nparts2;...~:
+
+#+begin_src org
+  ,#+OMNIX_COLOR: gray:black!30
+  ,#+OMNIX_COLOR: darkblue:blue!70!black
+  ,#+OMNIX_COLOR: purple:red,1;blue,1.5
+#+end_src
+
+The first syntax mixes a color that is ~percent%~ ~color1~ and ~(100 - percent)%~ ~color2~.
+When the second color is omitted, it defaults to white.
+The second syntax generates a color made by combining different ratios of previously defined colors, so ~purple~ above is made by mixing 1 part red with 1.5 parts blue.
+
+Note that color-mixing is performed by Emacs for HTML backends.
+This means you could get unexpected results when mixing with predefined colors.
+For example, if in Org you use the predefined color "red", that will directly get passed to HTML, but the mixed color ~lightred:red!70~ will be calculated in Emacs and the resulting hex color code will be written to the HTML output.
+If "red" is defined differently between Emacs and the CSS class, "lightred" may not be a proper tint of "red".
+To avoid this, "red" can be explicitly defined in Org.
+Alternatively, it may be possible to define colors using the CSS ~color-mix~.
 
 * Sansext links
 The ~sansext~ links are transformed into regular ~file~ links after replacing the path's extension with the backend preferred extension (as defined in ~omnix-sansext-extension-alist~).

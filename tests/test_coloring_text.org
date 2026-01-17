@@ -1,8 +1,17 @@
 #+TITLE: Test coloring text
 #+AUTHOR: Omnix
 #+OMNIX_COLOR: blue:#0071BC
+#+OMNIX_COLOR: gray:black!50
+#+OMNIX_COLOR: darkblue:blue!70!black
+#+OMNIX_COLOR: darkred:red!60!black
+#+OMNIX_COLOR: purple:red,1;blue,1.5
 
 * Color some text with a builtin color name
 Here's [[color:red][a colorful message]].
 * Color text with a custom color
 Here's [[color:blue][Another message]].
+* Mix colors
+[[color:darkblue][This is a mixed message]].
+[[color:darkred][This is a mixed message using a predefined color]].
+[[color:gray][Here's a light message]].
+[[color:purple][Mixing red and blue makes this]].

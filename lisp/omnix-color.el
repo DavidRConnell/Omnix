@@ -33,11 +33,21 @@
 ;;
 ;; So [[color:red][An important message]] will become
 ;; \textcolor{red}{An important message} for LaTeX.
+;;
+;; Colors can also be defined by mixing two or more colors by name using the
+;; xcolor syntax of #+OMNIX_COLOR: name:color1!percent!color2, where the new
+;; color can be referenced by name and will be percent color1 mixed with (100 -
+;; percent) color2. When color2 is absent, white is used. Equivalently, colors
+;; can be combined using "parts", like mixing paint (2 parts black to 1 part
+;; white) with the syntax #+OMNIX_COLOR: name:color1,npart1;color2,npart2;...,
+;; which will be converted to percentages either by the backend for LaTeX or in
+;; Emacs for HTML.
 
 ;;; Code:
 
 (require 'org)
 (require 'ox)
+(require 'cl-lib)
 
 (require 'omnix--utils)
 (require 'omnix--search)
@@ -81,12 +91,13 @@ same as the color name.")
   (format "<a style=\"color:%s;\">%s</a>" code description))
 
 (defun omnix-color--transcoder-fallback (name _ description)
-  "Transcode the color NAME and DESCRIPTION pair to plaintext representation."
+  "Transcode the color NAME and DESCRIPTION pair to plain text representation."
   (replace-regexp-in-string "%\\([cs]\\)"
 			    (lambda (substring)
 			      (if (string= (match-string 1 substring) "c")
 				  name
-				description)) omnix-color-fallback))
+				description))
+			    omnix-color-fallback))
 
 (defun omnix-color--remove-prefix (prefix string)
   "Remove PREFIX from the start of STRING if it exists.
@@ -106,19 +117,156 @@ INFO is the org-exporter communication channel plist."
   (let* ((transcoder (omnix--alist-get-backend backend
 					       omnix-color-transcoder-alist))
 	 (color-alist (plist-get info :omnix-colors))
-	 (color-code (alist-get (intern path) color-alist path)))
+	 (color-code (omnix-color--mix-colors (string-trim
+					       (alist-get path
+							  color-alist
+							  path nil #'string=))
+					      color-alist)))
     (funcall transcoder path color-code description)))
 
 (defun omnix-color--follow-link (color)
   "Color link type's follow function for finding the COLOR definition."
   (omnix-search--goto-paper color omnix-color-re))
 
+(defun omnix-color--resolve-color (path)
+  "Resolve the color PATH to an HTML HEX color."
+  (let* ((color-alist (omnix-search-get-candidates omnix-color-re))
+	 (colorspec (string-trim
+		     (alist-get path color-alist path nil #'string=))))
+    (omnix-color--mix-colors colorspec color-alist 'hex)))
+
+(defun omnix-color--mix-colors (colorspec color-alist &optional force-hex)
+  "Mix colors together if COLORSPEC is mixture recipe.
+
+If COLORSPEC is not a mixture recipe, returns the original COLORSPEC, either
+unaltered (default) or after ensuring it is a hex code when FORCE-HEX is
+non-nil. COLOR-ALIST provides an alist of defined colors of the form (name .
+hex-code)."
+  (if (not (omnix-color--mixture-p colorspec))
+      (if force-hex
+	  (omnix-color--name-to-hex colorspec)
+	colorspec)
+    (let* ((color-parts (omnix-color--mixture-percentages colorspec))
+	   (weighted-rgbs
+	    (mapcar (lambda (item)
+		      (mapcar (lambda (primary)
+				(* (/ (plist-get item :percent) 100.0) primary))
+			      (omnix-color--name-to-rgb
+			       (string-trim
+				(alist-get (plist-get item :color)
+					   color-alist
+					   (plist-get item :color)
+					   nil #'string=)))))
+		    color-parts)))
+      (apply #'omnix-color--rgb-to-hex (apply #'cl-mapcar #'+ weighted-rgbs)))))
+
+(defun omnix-color--name-to-hex (color)
+  "Return COLOR as a hex code."
+  (if (string-match-p "^#" color)
+      color
+    (apply #'omnix-color--rgb-to-hex (omnix-color--name-to-rgb color))))
+
+(defun omnix-color--rgb-to-hex (red green blue)
+  "Convert RED, GREEN, and BLUE components to hex.
+
+RED, GREEN, and BLUE should be normalized so their range is [0.0, 1.0]."
+  (format "#%02X%02X%02X"
+	  (round (* red 255))
+	  (round (* green 255))
+	  (round (* blue 255))))
+
+(defun omnix-color--name-to-rgb (color)
+  "Translate COLOR to a list of RGB components.
+
+COLOR can be a predefined name, a list of rgb, or a hex code.
+Each component is normalized to be between 0.0 and 1.0.
+
+If COLOR is already list of RGB components it is returned as is. This makes no
+attempt at normalizing the list if it isn't already."
+  (cond ((and (listp color) (= (length color) 3))
+	 color)
+	((string-match-p "^#" color)
+	 (let* ((hex (substring color 1 (length color)))
+		(stride (cond ((= (length hex) 3) 1)
+			      ((= (length hex) 6) 2)
+			      (t 4)))
+		(norm (float (- (expt 16 stride) 1)))
+		(idx (length hex))
+		(result '()))
+	   (while (> idx 0)
+	     (push (/ (string-to-number
+		       (substring hex (- idx stride) idx) 16)
+		      norm)
+		   result)
+	     (setq idx (- idx stride)))
+	   result))
+	((stringp color)
+	 (let ((rgb (alist-get color color-name-rgb-alist nil nil #'string=)))
+	   (if (not rgb)
+	       ;; For completion return black.
+	       '(1 1 1)
+	     (mapcar (lambda (component) (/ component 65535.0)) rgb))))
+	(t (message "\"%s\" is not a recognized color specification." color))))
+
+(defun omnix-color--mixture-p (colorspec)
+  "Determine if COLORSPEC is a mixture of colors.
+
+Returns true if COLORSPEC is one of the two mixture formats."
+  (string-match-p (rx (or "!" ";")) colorspec))
+
+(defun omnix-color--mixture-percentages (colorspec)
+  "Create a list of plists for each color and percent in COLORSPEC.
+
+Supports the percentage syntax (c1!p1!c2) and parts (c1,n1;c2,n2) syntax."
+  (cond ((string-match-p ";" colorspec)
+	 (let* ((ratios (mapcar (lambda (color)
+				  (let ((parts (split-string color ",")))
+				    (cons (car parts)
+					  (string-to-number (cadr parts)))))
+				(split-string colorspec ";")))
+		(part-acc (apply #'+ 0.0 (mapcar (lambda (part)
+						   (cdr part))
+						 ratios))))
+	   (mapcar (lambda (color)
+		     (list :color (car color)
+			   :percent (* 100 (/ (cdr color) part-acc))))
+		   ratios)))
+	((string-match-p "!" colorspec)
+	 (omnix-color--parse-percentages (split-string colorspec "!")))
+	(t (list (list :color colorspec :percent 100)))))
+
+(defun omnix-color--parse-percentages (parts)
+  "Parse a list of color PARTS to a flast list of color plists.
+
+Color plists are of the form (:color code :percent value)."
+  (when (< (length parts) 3)
+    (setq parts (append parts '("white"))))
+
+  (if (not parts)
+      nil
+    (let* ((c1 (car parts))
+	   (w1 (string-to-number (cadr parts)))
+	   (c2 (caddr parts))
+	   (current-mix
+	    ;; If c1 is already a color plist have to multiple each component
+	    ;; by c1's weight to get a flat list of color plists.
+	    (if (listp c1)
+		(append (mapcar (lambda (item)
+				  (list :color (plist-get item :color)
+					:percent (* (/ w1 100.0)
+						    (plist-get item :percent))))
+				c1)
+			(list (list :color c2 :percent (- 100.0 w1))))
+	      (list (list :color c1 :percent w1)
+		    (list :color c2 :percent (- 100.0 w1)))))
+	   (rest (cdddr parts)))
+      (if rest
+	  (omnix-color--parse-percentages (cons current-mix rest))
+	current-mix))))
+
 (defun omnix-color--link-face (color)
   "Set the color link's foreground to COLOR."
-  (let* ((color-alist
-	  (omnix-search--collect-project omnix-color-re))
-	 (hex-code (alist-get color color-alist nil nil #'string=)))
-
+  (let ((hex-code (omnix-color--resolve-color color)))
     (if (and hex-code (color-supported-p hex-code))
 	`(:inherit org-link :foreground ,hex-code)
       'org-link)))
@@ -140,7 +288,8 @@ INFO is the org-exporter communication channel plist."
       (let ((parts (split-string def ":")))
 	(if (not (eq (length parts) 2))
 	    (message "Malformed color definition \"%s\"; skipping." def)
-	  (push `(,(intern (car parts)) . ,(cadr parts)) color-alist))))
+	  (setq color-alist
+		(append color-alist (list (cons (car parts) (cadr parts))))))))
     (setq info (plist-put info :omnix-colors color-alist)))
   info)
 
@@ -159,7 +308,12 @@ xcolor's definecolor commands."
 	      (code (omnix-color--remove-prefix "#" (cdr color-pair))))
 	  (setq new-headers
 		(concat new-headers "\n"
-			(format "\\definecolor{%s}{HTML}{%s}" name code)))))
+			(cond
+			 ((string-match-p "!" code)
+			  (format "\\colorlet{%s}{%s}" name code))
+			 ((string-match-p ";" code)
+			  (format "\\colorlet{%s}{rgb:%s}" name code))
+			 (t (format "\\definecolor{%s}{HTML}{%s}" name code)))))))
 
       (setq info (plist-put info :latex-header
 			    (if current-headers
@@ -175,8 +329,7 @@ And maybe set up the LaTeX preamble if using a LaTeX based BACKEND."
       (omnix-color--setup-latex info)
     info))
 
-(add-to-list 'org-export-filter-options-functions
-	     #'omnix-color--setup)
+(add-to-list 'org-export-filter-options-functions #'omnix-color--setup)
 
 ;;; CAPF
 (defun omnix-color-capf ()
@@ -190,12 +343,13 @@ And maybe set up the LaTeX preamble if using a LaTeX based BACKEND."
 	    :exclusive 'no
 	    :annotation-function
 	    (lambda (key)
-	      (let ((hex-code (substring-no-properties
-			       (alist-get key candidates-alist nil nil #'string=))))
+	      (let ((hex-code
+		     (substring-no-properties
+		      (omnix-color--resolve-color key)))
+		    (desc (alist-get key candidates-alist nil nil #'string=)))
 		(if (and hex-code (color-supported-p hex-code))
-		    (format "  %s"
-			    (propertize hex-code 'face
-					`(:foreground ,hex-code)))
+		    (format "  %s" (propertize desc 'face
+					       `(:foreground ,hex-code)))
 		  "")))))))
 
 (defun omnix-color-setup-capf ()
