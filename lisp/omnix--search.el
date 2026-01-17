@@ -74,7 +74,8 @@ See also `omnix-search-property-re'."
 (defun omnix-search-property-re (name &rest groups)
   "Create a regex for finding drawer property NAME and collect regex GROUPS.
 
-See also `omnix-search-keyword-re'.")
+See also `omnix-search-keyword-re'."
+  (format (rx bol ":%s:" (* whitespace) "%s") name groups))
 
 (defvar omnix-search-include-re
   (omnix-search-keyword-re "INCLUDE" "\\(.*\\.org$\\)")
