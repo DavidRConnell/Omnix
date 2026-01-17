@@ -165,3 +165,20 @@ Processors are plists with at a minimum a name and an optional backend list when
 Modules will extend that interface to require a set of functions for performing specific tasks.
 Often this will mean a function per link that is handled.
 See the creation functions help for the exact functions required.
+
+* Tips
+You can use Omnix's search functionality to provide paper-aware completion outside of Omnix.
+As an example, the following function will wrap the ~citar~ citation completion to show candidates from paper specific bibliographies instead of the global ~citar-bibliography~.
+
+#+begin_src emacs-lisp
+  (defun my-citar-insert ()
+      "Use citar to insert a citation but use the local bib file if available."
+      (interactive)
+      (let* ((bibs (mapcar (lambda (relpath)
+  			   (expand-file-name relpath (projectile-project-root)))
+  			 (omnix-search-get-candidates
+  			  (omnix-search-keyword-re "BIBLIOGRAPHY" "\\(.*\\)"))))
+  	   (citar-bibliography (or bibs citar-bibliography)))
+
+        (call-interactively #'org-cite-insert)))
+#+end_src
