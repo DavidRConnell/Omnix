@@ -341,7 +341,7 @@ using RG or grep) and rare enough to not be worth the extra effort."
 
 Lists in different order will be considered different."
   (cond ((and (not ls1) (not ls2)) nil)
-	((not (string= (car ls1) (car ls2))) t)
+	((not (equal (car ls1) (car ls2))) t)
 	(t (omnix-search--includes-diff-p (cdr ls1) (cdr ls2)))))
 
 (defun omnix-search--collect-files (pattern files)
@@ -351,7 +351,7 @@ Returns a list of con cells where the car of each element is the file name and
 the cdr is the list of matches."
   (if (member omnix-search-program '(ripgrep grep))
       (omnix-search--collect-files-external omnix-search-program pattern files)
-    (omnix-search--collect-files-elisp)))
+    (omnix-search--collect-files-elisp pattern files)))
 
 (defun omnix-search--collect-files-external (program pattern files)
   "External variant of searching PATTERN across all FILES.
@@ -359,11 +359,16 @@ the cdr is the list of matches."
 Use external PROGRAM to search files."
   (when files
     (let* ((cmd-template (pcase program
-			   ('ripgrep "rg --no-line-number --color=never '%s' %s")
-			   ('grep "grep --color=never -E '%s' %s")))
+			   ('ripgrep
+			    "rg --no-line-number --color=never --null '%s' %s")
+			   ('grep "grep --color=never --null -E '%s' %s")))
 	   (cmd (format cmd-template
-			(string-replace "\\)" ")" (string-replace "\\(" "(" pattern))
-			(string-join files " ")))
+			(replace-regexp-in-string
+			 (rx "\\" (group (or "(" "|" ")")))
+			 (lambda (substring)
+			   (match-string 1 substring))
+			 pattern)
+			(mapconcat #'shell-quote-argument files " ")))
 	   (parent (file-name-directory (buffer-file-name)))
 	   (results (mapcar (lambda (f) (cons f nil)) files)))
 
@@ -372,15 +377,15 @@ Use external PROGRAM to search files."
 	(goto-char (point-min))
 
 	(while (not (eobp))
-	  (let ((line-end (line-end-position))
-		(filename (if (> (length files) 1)
-			      (progn
-				(search-forward ":" line-end t)
-				(omnix-search--absolute-path
-				 (buffer-substring-no-properties
-				  (line-beginning-position) (- (point) 1))
-				 parent))
-			    (car files))))
+	  (let* ((line-end (line-end-position))
+		 (filename (if (> (length files) 1)
+			       (progn
+				 (search-forward "\0" line-end t)
+				 (omnix-search--absolute-path
+				  (buffer-substring-no-properties
+				   (line-beginning-position) (- (point) 1))
+				  parent))
+			     (car files))))
 	    ;; Ensure patterns that expect match to start at BOL work.
 	    (delete-char (- (line-beginning-position) (point)))
 	    (when (re-search-forward pattern line-end t)
@@ -469,8 +474,11 @@ For example, returns non-nil when in an `org-mode' buffer and point is at
 
 If non-nil, `match-string' will be set."
   (and (eq major-mode 'org-mode)
-       (looking-back (format (rx "[[%s:" (group (* (not "]")))) type)
-		     (line-beginning-position))))
+       (let ((limit (line-beginning-position)))
+	 (save-excursion
+	   (re-search-backward
+	    (rx "[[" (literal type) ":" (group (* (not "]"))))
+	    limit t)))))
 
 (provide 'omnix--search)
 ;;; omnix--search.el ends here
