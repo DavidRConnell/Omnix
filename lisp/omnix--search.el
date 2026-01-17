@@ -230,7 +230,11 @@ the new search.
 
 If no cache exists, PATTERN is used to search all files in paper and populate
 the cache."
-  (apply #'append (mapcar #'cdr (omnix-search--collect-paper pattern))))
+  (let ((results
+	 (apply #'append (mapcar #'cdr (omnix-search--collect-paper pattern)))))
+    (when (listp (car results))
+      (omnix-search--pad-whitespace results))
+    results))
 
 ;; Collection
 (defun omnix-search--collect-paper (pattern)
@@ -388,12 +392,6 @@ Use external PROGRAM to search files."
 		      (match-string-no-properties 1))
 		    (alist-get filename results nil nil #'string=))))
 	  (forward-line 1)))
-
-      (if (match-string 2)
-	  (dolist (file results)
-	    (setf (alist-get (car file) results nil nil #'string=)
-		  (omnix-search--pad-whitespace
-		   (alist-get (car file) results nil nil #'string=)))))
       results)))
 
 (defun omnix-search--collect-files-elisp (pattern files)
@@ -420,9 +418,7 @@ alist associating group 1 to group 2."
 			(match-string-no-properties 2))
 		  results)
 	  (push (match-string-no-properties 1) results))))
-    (if (match-string 2)
-	(omnix-search--pad-whitespace results)
-      results)))
+    results))
 
 (defun omnix-search--pad-whitespace (collection)
   "Pad the whitespace of the description (cdr) of COLLECTION alist.
