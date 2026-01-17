@@ -265,8 +265,6 @@ Returns the list of pattern matches (same as the contents of the cache)"
 	  (time-convert (current-time) 'integer)))
 
   (let ((modified-files (omnix-search--modified-files pattern))
-	(cache (omnix-search--get-cache pattern))
-	(scan-times (omnix-search--last-cache-updates pattern))
 	(now (time-convert (current-time) 'integer)))
     (dolist (m (omnix-search--collect-files pattern modified-files))
       (setf (alist-get (car m)
@@ -288,8 +286,7 @@ Returns the list of pattern matches (same as the contents of the cache)"
   "Return a list of paper files that have been modified since last scan.
 
 Uses cache for PATTERN."
-  (let ((now (time-convert (current-time) 'integer))
-	(last-updates (omnix-search--last-cache-updates pattern)))
+  (let ((last-updates (omnix-search--last-cache-updates pattern)))
     (remq nil
 	  (mapcar (lambda (file)
 		    (let ((mtime (time-convert
