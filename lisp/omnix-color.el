@@ -204,7 +204,7 @@ attempt at normalizing the list if it isn't already."
 	 (let ((rgb (alist-get color color-name-rgb-alist nil nil #'string=)))
 	   (if (not rgb)
 	       ;; For completion return black.
-	       '(1 1 1)
+	       '(0 0 0)
 	     (mapcar (lambda (component) (/ component 65535.0)) rgb))))
 	(t (message "\"%s\" is not a recognized color specification." color))))
 
