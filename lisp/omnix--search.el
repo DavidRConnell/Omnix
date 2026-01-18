@@ -360,8 +360,8 @@ Use external PROGRAM to search files."
   (when files
     (let* ((cmd-template (pcase program
 			   ('ripgrep
-			    "rg --no-line-number --color=never --null '%s' %s")
-			   ('grep "grep --color=never --null -E '%s' %s")))
+			    "rg --no-line-number --color=never -H --null '%s' %s")
+			   ('grep "grep --color=never -H --null -E '%s' %s")))
 	   (cmd (format cmd-template
 			(replace-regexp-in-string
 			 (rx "\\" (group (or "(" "|" ")")))
@@ -377,23 +377,22 @@ Use external PROGRAM to search files."
 	(goto-char (point-min))
 
 	(while (not (eobp))
-	  (let* ((line-end (line-end-position))
-		 (filename (if (> (length files) 1)
-			       (progn
-				 (search-forward "\0" line-end t)
-				 (omnix-search--absolute-path
-				  (buffer-substring-no-properties
-				   (line-beginning-position) (- (point) 1))
-				  parent))
-			     (car files))))
-	    ;; Ensure patterns that expect match to start at BOL work.
-	    (delete-char (- (line-beginning-position) (point)))
-	    (when (re-search-forward pattern line-end t)
-	      (push (if (match-string 2)
-			(cons (match-string-no-properties 1)
-			      (match-string-no-properties 2))
-		      (match-string-no-properties 1))
-		    (alist-get filename results nil nil #'string=))))
+	  (let ((line-end (line-end-position)))
+	    (when (search-forward "\0" line-end t)
+	      (let* ((match-beg (point))
+		     (filename
+		      (omnix-search--absolute-path
+		       (buffer-substring-no-properties
+			(line-beginning-position) (- match-beg 1))
+		       parent)))
+		;; Ensure patterns that expect match to start at BOL work.
+		(delete-region (line-beginning-position) match-beg)
+		(when (re-search-forward pattern line-end t)
+		  (push (if (match-string 2)
+			    (cons (match-string-no-properties 1)
+				  (match-string-no-properties 2))
+			  (match-string-no-properties 1))
+			(alist-get filename results nil nil #'string=))))))
 	  (forward-line 1)))
       results)))
 
