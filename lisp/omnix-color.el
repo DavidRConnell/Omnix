@@ -334,7 +334,7 @@ And maybe set up the LaTeX preamble if using a LaTeX based BACKEND."
 ;;; CAPF
 (defun omnix-color-capf ()
   "Completion at point function for color links."
-  (when (omnix-search--looking-at-link-p "color\\(?:/[^:]*\\)?")
+  (when (omnix-search--looking-at-link-p "color")
     (let* ((start (match-beginning 1))
 	   (end (point))
 	   (candidates-alist (omnix-search-get-candidates omnix-color-re)))

@@ -403,7 +403,9 @@ Returns the modified INFO."
 ;;; CAPF
 (defun omnix-acronym-capf ()
   "Completion at point function for acronym links."
-  (when (omnix-search--looking-at-link-p "acr\\(?:/[^:]*\\)?")
+  (when (omnix-search--looking-at-link-p
+	 (rx "acr"
+	     (? "/" (or "short" "long" "full"))))
     (let* ((start (match-beginning 1))
 	   (end (point))
 	   (candidates-alist (omnix-search-get-candidates omnix-acronym-re)))
