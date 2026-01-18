@@ -1,3 +1,4 @@
+export PKG := omnix
 export TOP_DIR := $(PWD)
 export SRC_DIR := $(TOP_DIR)/lisp
 SRC_FILES := $(wildcard $(SRC_DIR)/*.el)
@@ -8,7 +9,7 @@ export TEST_FILES
 export REFERENCE_FILES
 export TEST_EXTS
 
-EMACS ?= emacs
+export EMACS ?= emacs
 INIT_EL ?= "(progn (require 'omnix) (require 'batch-ox) (omnix-global))"
 LOAD_PATH ?= -L $(SRC_DIR) -L $(TOP_DIR)/vendor/batch-ox
 export EMACS_CMD := $(EMACS) -Q --batch $(LOAD_PATH) --eval $(INIT_EL)
@@ -18,7 +19,7 @@ ifeq ($(VERSION),)
 	VERSION = 0.1.0-alpha
 endif
 
-PACKAGE_NAME := omnix-$(VERSION)
+PACKAGE_NAME := $(PKG)-$(VERSION)
 
 .PHONY: all
 all: build
@@ -32,12 +33,16 @@ build: $(BYTE_FILES)
 	@echo
 
 .PHONY: dist
-dist: check-package $(PACKAGE_NAME).tar
+dist: check-package $(PACKAGE_NAME).tar docs
 
 $(PACKAGE_NAME).tar: $(SRC_FILES)
 	sed -i 's/\(Version:\).*/\1 $(VERSION)/g' $(SRC_DIR)/omnix.el
 	sed -i 's/[0-9]\.[0-9]\.[0-9][^"]*/$(VERSION)/g' $(SRC_DIR)/omnix-pkg.el
 	tar --transform='s,^,$(PACKAGE_NAME)/,' -c -f "$@" -C $(SRC_DIR) $(notdir $(SRC_FILES))
+
+.PHONY: docs
+docs:
+	$(MAKE) -C docs all
 
 # Regular org-export based tests to confirm Omnix is behaving as expected.
 .PHONY: check
@@ -69,12 +74,11 @@ check-pdfs: build
 .PHONY: clean
 clean:
 	$(MAKE) -C tests clean
+	rm -f $(BYTE_FILES)
 	rm -f *.tar
+	$(MAKE) -C docs clean
 
 .PHONY: distclean
-distclean: clean clean-bytefiles
+distclean: clean
 	$(MAKE) -C tests distclean
-
-.PHONY: clean-bytefiles
-clean-bytefiles:
-	rm -f $(BYTE_FILES)
+	$(MAKE) -C docs distclean

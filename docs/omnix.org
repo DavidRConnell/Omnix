@@ -1,0 +1,25 @@
+#+TITLE: Omnix: Omnix backend org exporter
+#+AUTHOR: David R. Connell
+
+* Introduction
+* Paper organization
+* Processors
+** Basics
+** Setting processors
+- Globally
+- Per paper
+** Creating new processors
+* Acronyms
+* Colors
+* References
+* Author blocks
+* Lists of elements
+- Acronyms
+- Figures
+- Tables
+- Etc
+* CAPFs
+** Paper-scope completion
+** Creating new CAPFs
+Can reuse omnix searching to create new CAPFs.
+* 3rd-party integration
