@@ -474,11 +474,8 @@ For example, returns non-nil when in an `org-mode' buffer and point is at
 
 If non-nil, `match-string' will be set."
   (and (eq major-mode 'org-mode)
-       (let ((limit (line-beginning-position)))
-	 (save-excursion
-	   (re-search-backward
-	    (rx "[[" (literal type) ":" (group (* (not "]"))))
-	    limit t)))))
+       (looking-back (rx "[[" (regex type) ":" (group (* (not "]"))))
+		     (line-beginning-position))))
 
 (provide 'omnix--search)
 ;;; omnix--search.el ends here
