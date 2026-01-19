@@ -22,16 +22,6 @@ With the package location added to your ~load-path~, you can load it with the us
   (require 'omnix)
 #+end_src
 
-This will load the modules that do not have default side effects on outputs (specifically tex).
-One of the goals of this package is to produce minimal tex files that can't be sent elsewhere to generate various other files, as such modules like ~omnix-color~ are not loaded by default as they will cause generated tex files to always load the ~xcolor~ package.
-Other modules, such as ~omnix-acronym~, may add dependencies to tex files, but they only do so when either the default settings are changed or when their features are actually used and can therefore be safely loaded.
-Instead, these modules can be loaded manually, or ~omnix~ makes a ~omnix-global~ function available which will load the remaining modules.
-
-#+begin_src elisp
-  (require 'omnix)
-  (omnix-global)
-#+end_src
-
 ** CAPFs
 Omnix provides a completion at point function (CAPF) for some link types.
 This can be turned on by adding the relevant setup functions to `org-mode-hook`.

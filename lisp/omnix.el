@@ -47,20 +47,6 @@
 ;;   changed on a per backend basis using either the global alist variables or
 ;;   keyword options in the Org mode buffer.
 ;;
-;; Usage:
-;;   Due to one of the goals being to produce minimal tex files that can be
-;;   fully converted through other methods (such as submitting a tex file to
-;;   someone else who will use to generate other files), Omnix is designed to
-;;   be loaded a-la-cart to prevent extra LaTeX packages from ending up in the
-;;   preamble when not needed.
-;;
-;;   Modules that are minimally invasive (at least with the default settings)
-;;   will be loaded with (require 'omnix), whereas modules that
-;;   indiscriminately add packages to tex files (like `omnix-color') will
-;;   require manual requiring.
-;;
-;;   To load all modules you can call the `omnix-global' function.
-;;
 ;;  Modules:
 ;;    Omnix's features are exposed through different self-contained modules.
 ;;    Every public module should provide one high level feature and should work
@@ -68,7 +54,7 @@
 ;;
 ;;    Current modules:
 ;;      `omnix-acronym' - Manages acronym definitions.
-;;      `omnix-sansext' - Links to select backend preferred image types.
+;;      `omnix-sansext' - Links to backend preferred image types.
 ;;      `omnix-color' - Text coloring.
 ;;      `omnix-capf' - Define new completion functions.
 
@@ -76,23 +62,13 @@
 
 (require 'omnix-acronym)
 (require 'omnix-sansext)
+(require 'omnix-color)
 
 (defgroup omnix nil
   "Omni backend org-export links and macros."
   :tag "Omnix"
   :prefix "omnix"
   :group 'org)
-
-(defun omnix-global ()
-  "Load all omnix modules.
-
-By default requiring Omnix only loads modules that don't impact tex outputs
-unless they are actually used. (Such as acronym, which by default will not
-impact the tex file produced unless a acronym is defined.)
-
-Other modules can be required manually or calling this function will load all
-public modules."
-  (require 'omnix-color))
 
 (provide 'omnix)
 ;;; omnix.el ends here.

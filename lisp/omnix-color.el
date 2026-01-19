@@ -299,38 +299,52 @@ Color plists are of the form (:color code :percent value)."
 
 Adds the xcolor package and transcodes the keyword OMNIX_COLOR definitions to
 xcolor's definecolor commands."
-  (if (plist-get info :omnix-plain)
-      info ; Do not use package xcolor when running in plain mode.
-    (let ((color-alist (plist-get info :omnix-colors))
-	  (current-headers (plist-get info :latex-header))
-	  (new-headers "\\usepackage{xcolor}"))
-      (dolist (color-pair color-alist)
-	(let ((name (car color-pair))
-	      (code (omnix-color--remove-prefix "#" (cdr color-pair))))
-	  (setq new-headers
-		(concat new-headers "\n"
-			(cond
-			 ((string-match-p "!" code)
-			  (format "\\colorlet{%s}{%s}" name code))
-			 ((string-match-p ";" code)
-			  (format "\\colorlet{%s}{rgb:%s}" name code))
-			 (t (format "\\definecolor{%s}{HTML}{%s}" name code)))))))
+  (let ((color-alist (plist-get info :omnix-colors))
+	(current-headers (plist-get info :latex-header))
+	(new-headers "\\usepackage{xcolor}"))
+    (dolist (color-pair color-alist)
+      (let ((name (car color-pair))
+	    (code (omnix-color--remove-prefix "#" (cdr color-pair))))
+	(setq new-headers
+	      (concat new-headers "\n"
+		      (cond
+		       ((string-match-p "!" code)
+			(format "\\colorlet{%s}{%s}" name code))
+		       ((string-match-p ";" code)
+			(format "\\colorlet{%s}{rgb:%s}" name code))
+		       (t (format "\\definecolor{%s}{HTML}{%s}" name code)))))))
 
-      (setq info (plist-put info :latex-header
-			    (if current-headers
-				(concat current-headers "\n" new-headers)
-			      new-headers))))))
+    (setq info (plist-put info :latex-header
+			  (if current-headers
+			      (concat current-headers "\n" new-headers)
+			    new-headers)))))
 
-(defun omnix-color--setup (info backend)
+(defun omnix-color--setup (tree backend info)
   "Register the colors found in the options of the INFO plist.
 
-And maybe set up the LaTeX preamble if using a LaTeX based BACKEND."
+And maybe set up the LaTeX preamble if using a LaTeX based BACKEND.
+TREE is the exported file's AST."
   (omnix-color--register-colors info)
-  (if (org-export-derived-backend-p backend 'latex)
-      (omnix-color--setup-latex info)
-    info))
 
-(add-to-list 'org-export-filter-options-functions #'omnix-color--setup)
+  (when (and (org-export-derived-backend-p backend 'latex)
+	     (not (plist-get info :omnix-plain))
+	     (omnix-color--any-p tree info))
+    (omnix-color--setup-latex info))
+
+  tree)
+
+(defun omnix-color--any-p (tree info)
+  "Return non-nil if color links are used or custom colors are defined.
+
+INFO is a communication channel and TREE is the AST for the file being
+exported."
+  (or (plist-get info :omnix-colors)
+      (org-element-map tree 'link
+        (lambda (link)
+          (string= (org-element-property :type link) "color"))
+        info t)))
+
+(add-to-list 'org-export-filter-parse-tree-functions #'omnix-color--setup)
 
 ;;; CAPF
 (defun omnix-color-capf (start end)

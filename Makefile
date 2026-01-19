@@ -10,7 +10,7 @@ export REFERENCE_FILES
 export TEST_EXTS
 
 export EMACS ?= emacs
-INIT_EL ?= "(progn (require 'omnix) (require 'batch-ox) (omnix-global))"
+INIT_EL ?= "(progn (require 'omnix) (require 'batch-ox))"
 LOAD_PATH ?= -L $(SRC_DIR) -L $(TOP_DIR)/vendor/batch-ox
 export EMACS_CMD := $(EMACS) -Q --batch $(LOAD_PATH) --eval $(INIT_EL)
 
