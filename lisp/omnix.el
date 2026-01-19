@@ -70,6 +70,7 @@
 ;;      `omnix-acronym' - Manages acronym definitions.
 ;;      `omnix-sansext' - Links to select backend preferred image types.
 ;;      `omnix-color' - Text coloring.
+;;      `omnix-capf' - Define new completion functions.
 
 ;;; Code:
 

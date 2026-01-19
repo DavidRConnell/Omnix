@@ -33,13 +33,15 @@ Instead, these modules can be loaded manually, or ~omnix~ makes a ~omnix-global~
 #+end_src
 
 ** CAPFs
-Omnix provides completion at point functions (CAPFs) for some link types.
-These can be turned on by adding the relevant setup functions to `org-mode-hook`.
+Omnix provides a completion at point function (CAPF) for some link types.
+This can be turned on by adding the relevant setup functions to `org-mode-hook`.
 
 #+begin_src elisp
-  (add-hook 'org-mode-hook #'omnix-acronym-setup-capf)
-  (add-hook 'org-mode-hook #'omnix-color-setup-capf)
+  (add-hook 'org-mode-hook #'omnix-capf-setup)
 #+end_src
+
+The capf function also adds completion for general org link type name completion.
+For example if point is in a link but before a ":" separator, this will provide candidates for link types.
 
 * Design principles
 ** Papers

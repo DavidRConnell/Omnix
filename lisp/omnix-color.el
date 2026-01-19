@@ -51,6 +51,7 @@
 
 (require 'omnix--utils)
 (require 'omnix--search)
+(require 'omnix-capf)
 
 (defvar omnix-color-fallback "**%s**"
   "The format string use when a backend does not support color.
@@ -332,29 +333,27 @@ And maybe set up the LaTeX preamble if using a LaTeX based BACKEND."
 (add-to-list 'org-export-filter-options-functions #'omnix-color--setup)
 
 ;;; CAPF
-(defun omnix-color-capf ()
-  "Completion at point function for color links."
-  (when (omnix-search--looking-at-link-p "color")
-    (let* ((start (match-beginning 1))
-	   (end (point))
-	   (candidates-alist (omnix-search-get-candidates omnix-color-re)))
-      (list start end
-	    (mapcar #'car candidates-alist)
-	    :exclusive 'no
-	    :annotation-function
-	    (lambda (key)
-	      (let ((hex-code
-		     (substring-no-properties
-		      (omnix-color--resolve-color key)))
-		    (desc (alist-get key candidates-alist nil nil #'string=)))
-		(if (and hex-code (color-supported-p hex-code))
-		    (format "  %s" (propertize desc 'face
-					       `(:foreground ,hex-code)))
-		  "")))))))
+(defun omnix-color-capf (start end)
+  "Completion at point function for color links.
 
-(defun omnix-color-setup-capf ()
-  "Add the color CAPF to completion functions."
-  (add-hook 'completion-at-point-functions #'omnix-color-capf nil t))
+START and END are the points delimiting the START and END of the current
+candidate."
+  (let ((candidates-alist (omnix-search-get-candidates omnix-color-re)))
+    (list start end
+	  (mapcar #'car candidates-alist)
+	  :exclusive 'no
+	  :annotation-function
+	  (lambda (key)
+	    (let ((hex-code
+		   (substring-no-properties
+		    (omnix-color--resolve-color key)))
+		  (desc (alist-get key candidates-alist nil nil #'string=)))
+	      (if (and hex-code (color-supported-p hex-code))
+		  (format "  %s" (propertize desc 'face
+					     `(:foreground ,hex-code)))
+		""))))))
+
+(add-to-list 'omnix-capf-alist (cons "color" #'omnix-color-capf))
 
 (provide 'omnix-color)
 ;;; omnix-color.el ends here

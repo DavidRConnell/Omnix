@@ -223,14 +223,20 @@ Returns a list of pairs (file . included) where included is of the same form."
 		       included))))
 
 (defun omnix-search-get-candidates (pattern)
-  "Get a list of candidates for the cache associated with symbol CACHE.
+  "Get a list of candidates that match PATTERN across the paper.
 
-Combines all cached candidates across a paper's Org files, searches the current
-buffer using PATTERN, and updates the buffer's file's cache with the results of
-the new search.
+The list of candidates are aggregated across all Org files in the paper into a
+single list for use with completion functions.
 
-If no cache exists, PATTERN is used to search all files in paper and populate
-the cache."
+PATTERN is a regular expression pattern that should have exactly 1 or 2 groups.
+If PATTERN has two groups, the second group will be used as a description.
+When collecting descriptions, they will be padded with white space to align
+them.
+
+Results are cached. If PATTERN has been searched before, the cache will be used
+instead of scanning the entire paper again. The current buffer will always be
+re-scanned along with any files that have been modified since the cache was
+last updated."
   (let ((results
 	 (apply #'append (mapcar #'cdr (omnix-search--collect-paper pattern)))))
     (when (listp (car results))
@@ -464,17 +470,6 @@ If NAME is found, jump to that point. If point is in another file,
       (while (and (search-forward-regexp pattern)
 		  (not (string= (match-string 1) name))))
       (goto-char (match-beginning 1)))))
-
-(defun omnix-search--looking-at-link-p (type)
-  "Test if point is currently in an omnix link of TYPE.
-
-For example, returns non-nil when in an `org-mode' buffer and point is at
-[[acr:|, if TYPE is acr.
-
-If non-nil, `match-string' will be set."
-  (and (eq major-mode 'org-mode)
-       (looking-back (rx "[[" (regex type) ":" (group (* (not "]"))))
-		     (line-beginning-position))))
 
 (provide 'omnix--search)
 ;;; omnix--search.el ends here

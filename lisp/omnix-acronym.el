@@ -78,6 +78,7 @@
 (require 'omnix--utils)
 (require 'omnix--processors)
 (require 'omnix--search)
+(require 'omnix-capf)
 
 ;;; Public vars.
 (defvar omnix-acronym-alist '()
@@ -401,26 +402,22 @@ Returns the modified INFO."
 	     #'omnix-acronym--initialize-acronym-processor)
 
 ;;; CAPF
-(defun omnix-acronym-capf ()
-  "Completion at point function for acronym links."
-  (when (omnix-search--looking-at-link-p
-	 (rx "acr"
-	     (? "/" (or "short" "long" "full"))))
-    (let* ((start (match-beginning 1))
-	   (end (point))
-	   (candidates-alist (omnix-search-get-candidates omnix-acronym-re)))
-      (list start end
-	    (mapcar #'car candidates-alist)
-	    :exclusive 'no
-	    :annotation-function
-	    (lambda (key)
-	      (let ((desc (alist-get key candidates-alist nil nil #'string=)))
-		(if desc
-		    (format "  %s" desc) "")))))))
+(defun omnix-acronym-capf (start end)
+  "Completion at point function for acronym links.
 
-(defun omnix-acronym-setup-capf ()
-  "Add the acronym CAPF to completion functions."
-  (add-hook 'completion-at-point-functions #'omnix-acronym-capf nil t))
+START and END are the points that mark the START and END of the current entry."
+  (let ((candidates-alist (omnix-search-get-candidates omnix-acronym-re)))
+    (list start end
+	  (mapcar #'car candidates-alist)
+	  :exclusive 'no
+	  :annotation-function
+	  (lambda (key)
+	    (let ((desc (alist-get key candidates-alist nil nil #'string=)))
+	      (if desc
+		  (format "  %s" desc) ""))))))
+
+(dolist (link '("acr" "acr/short" "acr/long" "acr/full"))
+  (add-to-list 'omnix-capf-alist (cons link #'omnix-acronym-capf)))
 
 (provide 'omnix-acronym)
 ;;; omnix-acronym.el ends here
