@@ -1,0 +1,56 @@
+pre.src {
+    background-color: #FAFAFA;
+}
+
+p, hr, h1, h2, h3, h4, h5, h6 {
+    margin: auto;
+    margin-left: 32px;
+    margin-right: 32px;
+    max-width: 48em;
+    line-height: 1.4;
+}
+
+p {
+    font-size: 12pt;
+    font-weight: normal;
+    color: #222222;
+    text-indent: 3ex;
+}
+
+hr {
+    margin-top: 2ex;
+}
+
+code {
+   color: black;
+   font-weight: 600;
+}
+
+h1, h2, h3, h4, h5, h6 {
+   color: black;
+   font-family: sans-serif;
+   margin-top: 2ex;
+   margin-bottom: 0.5ex;
+}
+
+h2 {
+   font-size: 24pt;
+}
+
+h3 {
+   font-size: 14pt;
+}
+
+a:link {
+   color: #0031A9;
+}
+
+a:visited {
+   color: #673AB7;
+}
+
+pre.src:before {
+   font-family: sans-serif;
+   font-weight: bold;
+   font-size: 12;
+}

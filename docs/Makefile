@@ -7,8 +7,9 @@ html: public
 .PHONY: info
 info: $(PKG).info
 
-public: $(PKG).texi
-	$(MAKEINFO) --html $< -o $@
+public: $(PKG).texi docs.css
+	$(MAKEINFO) --html --css-include=docs.css $< -o $@
+	touch public
 
 %.info: %.texi
 	$(MAKEINFO) $< -o $@
